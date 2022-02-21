@@ -1,0 +1,1610 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>A .fancy[fun] intro to Multilevel Models in R</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Fabio Votta" />
+    <meta name="date" content="2022-02-21" />
+    <script src="libs/header-attrs-2.11/header-attrs.js"></script>
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <script src="libs/xaringanExtra-progressBar-0.0.1/progress-bar.js"></script>
+    <link href="libs/panelset-0.2.6/panelset.css" rel="stylesheet" />
+    <script src="libs/panelset-0.2.6/panelset.js"></script>
+    <link rel="stylesheet" href="ascor.css" type="text/css" />
+    <link rel="stylesheet" href="fonts.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: bottom, left, title-slide
+
+# A .fancy[fun] intro to Multilevel Models in R
+## ’<em>What’s so random about these slopes anyway?’</em>
+### Fabio Votta
+### 2022-02-21
+
+---
+
+
+layout: true
+    
+&lt;style&gt;
+.onehundredtwenty {
+  font-size: 120%;
+   }
+
+&lt;style&gt;
+.ninety {
+  font-size: 90%;
+   }
+
+.eightyfive {
+  font-size: 85%;
+   }
+   
+.eighty {
+  font-size: 80%;
+   }
+   
+.seventyfive {
+  font-size: 75%;
+   }
+   
+.seventy {
+  font-size: 70%;
+   }
+   
+.fifty {
+  font-size: 50%;
+   }
+   
+.forty {
+  font-size: 40%;
+   }
+   
+.pull-left80 {
+  float: left;
+  width: 80%;
+}
+.pull-right20 {
+  float: right;
+  width: 20%;
+}
+&lt;/style&gt;
+    
+&lt;div class="logo"&gt;&lt;/div&gt; 
+
+
+
+
+<style>.xe__progress-bar__container {
+  bottom:0;
+  opacity: 1;
+  position:absolute;
+  right:0;
+  left: 0;
+}
+.xe__progress-bar {
+  height: 0.25em;
+  background-color: #0051BA;
+  width: calc(var(--slide-current) / var(--slide-total) * 100%);
+}
+.remark-visible .xe__progress-bar {
+  animation: xe__progress-bar__wipe 200ms forwards;
+  animation-timing-function: cubic-bezier(.86,0,.07,1);
+}
+@keyframes xe__progress-bar__wipe {
+  0% { width: calc(var(--slide-previous) / var(--slide-total) * 100%); }
+  100% { width: calc(var(--slide-current) / var(--slide-total) * 100%); }
+}</style><style>.panelset{--panel-tabs-sideways-max-width: 28%;}</style>
+
+---
+
+
+class: white
+
+#### Everyone struggles at first but it gets better!
+
+&lt;img src="https://raw.githubusercontent.com/favstats/ds3_r_intro/main/images/r_first_then_new.png" width="90%" style="display: block; margin: auto;" /&gt;
+
+
+&lt;!-- ![](images/r_first_then_new.png){width=50%} --&gt;
+
+.fifty[Illustration adapted from [Allison Horst](https://twitter.com/allison_horst)]
+
+--
+
+  + My experience is that this stuff isn't super easy... but it gets better!
+  
+--
+  
++ Awesome inclusive community that is always ready to help
++ Active blogosphere with use cases and examples
+
+
+---
+
+### Overview
+
++ **Why** *Multilevel Models*?
++ **What** are *Multilevel Models*?
++ **How** estimate *Multilevel Models*?
++ **How** interpret *Multilevel Models*?
++ **How** diagnose *Multilevel Models*?
+
+---
+
+
+
+class: white
+
+### Data Structures
+
+
+.eightyfive[You might be used to your data looking like this: An independent variable `\(x\)` and a dependent variable `\(y\)`.]
+
+.leftcol80[
+&lt;img src="index_files/figure-html/unnamed-chunk-2-1.png" width="720" /&gt;
+
+]
+
+--
+
+.rightcol20[
+
+&lt;br&gt;
+&lt;br&gt;
+&lt;br&gt;
+
+.eightyfive[From this data we may conclude that *x is **positively** correlated with y*.]
+
+]
+
+
+
+---
+
+
+
+class: white
+
+### Data Structures
+
+
+.eightyfive[However, if we introduce *groupings* of the data, a different picture emerges.]
+
+.pull-left80[
+&lt;img src="index_files/figure-html/unnamed-chunk-3-1.png" width="720" /&gt;
+
+]
+
+--
+
+.pull-left20[
+
+&lt;br&gt;
+&lt;br&gt;
+&lt;br&gt;
+
+.eightyfive[In each of the groupings we find a ***negative** correlation between x and y*.]
+
+]
+
+---
+
+class: black
+
+### So what is going on?
+
+--
+
+.pull-left[
+
+A phenomena called:
+
+# .green[.onehundredtwenty[.creepy[Simpson's Paradox]]]
+
+![](https://c.tenor.com/z-7D_CXyUAoAAAAC/scared-simpsons.gif)
+
+
+]
+
+--
+
+.pull-right[
+
+
+
+
+.eighty[+ Has nothing to do with the Simpsons]
+
+.eighty[+ Is not all that scary]
+
+
+.eighty["**Simpson’s Paradox** is a statistical phenomenon where an association between two variables in a population ***emerges***, ***disappears*** or ***reverses*** when the population is divided into subpopulations."]
+
+.fifty[(Stanford Encyclopedia of Philosophy 2021)]
+
+&lt;img src="index_files/figure-html/unnamed-chunk-4-1.png" width="432" /&gt;
+
+]
+
+
+---
+
+class: white
+
+### Data Structures
+
+Simpson's paradox teaches us that we have to be mindful of *structures* within our data.
+
+
+
+.pull-left[
+
+We might have students **nested** in schools
+
+![](img/Slide1.PNG)
+
+.eighty[Students on the *first level*, schools on the *second level*]
+]
+
+--
+
+.pull-right[
+
+Or timepoints **nested** in people
+
+![](img/Slide2.PNG)
+
+.eighty[Timepoints on the *first level*, people on the *second level*]
+]
+
+--
+
+We can also easily imagine a **three-level data structure**: 
+
+&gt; timepoints nested in people nested in schools
+
+---
+
+class: white
+
+### Data Structures
+
+.eighty[There are two types of variance important to consider in our modeling:]
+
++ .eighty[**within-group variance** (i.e. differences *within a group*)]
+
++ .eighty[**between-group variance** (i.e. differences *between groups*)]
+
+.leftcol65[
+![](img/elaborate.png)
+
+
+
+]
+
+.rightcol35[
+&lt;br&gt;&lt;br&gt;&lt;br&gt;
+
+&gt; Data points within a group are often more similar than between groups.
+
+
+&lt;br&gt;&lt;br&gt;&lt;br&gt;
+
+.fifty[Elaborate sketch of a multilevel data structure]
+]
+
+
+&lt;!-- &lt;img src="img/elaborate.png" width="60%"&gt; --&gt;
+
+
+---
+
+### Why Multilevel Models?
+
+--
+
++ Control for multilevel structures: your data may have
+  + different average levels of your dependent and independent variables
+  + how does your effect of interest vary by group?
+  
++ More accurate calculation of standard errors
+  + Standard linear regression assumes independence of cases and errors
+
++ Estimate group-level predictors and cross-level interactions
+  + for example, how is the GDP of a country associated with individual-level variables
+
+
+---
+
+### What is a Multilevel Model
+
++ Maximum Likelihood
+
++ Estimate a model per group
+
++ Fixed and random effects
+
++ Random intercepts and random slopes
+
+
+---
+
+### What is a model?
+
+A simplified but informative representation of a phenomena.
+
+This is a simple linear regressions:
+
+$$y = \color{blue}{\alpha} +  \color{lightgreen}{\beta} \times X + \color{purple}{\epsilon_i} $$
+
+This is a Null Model:
+
+`$$y = \color{blue}{\alpha} + \color{purple}{\epsilon_i}$$`
+
+
+---
+
+class: white
+
+### Linear Regression I
+
+.leftcol20[
+
+&lt;br&gt;
+&lt;br&gt;
+&lt;br&gt;
+
+.eightyfive[Imagine we have a dependent variable `\(y\)`. It is distributed like this:]
+
+
+]
+
+.rightcol80[
+
+
+&lt;img src="index_files/figure-html/unnamed-chunk-5-1.png" width="720" /&gt;
+
+]
+
+
+
+---
+
+class: white
+
+### Linear Regression II - Null Model
+
+
+.leftcol20[
+
+&lt;br&gt;
+&lt;br&gt;
+&lt;br&gt;
+
+**$$y = \color{blue}{\alpha} + \color{purple}{\epsilon_i}$$**
+
+
+]
+
+
+.rightcol80[
+
+
+&lt;img src="index_files/figure-html/unnamed-chunk-6-1.png" width="720" /&gt;
+
+]
+
+
+---
+
+class: white
+
+### Linear Regression III - Null Model
+
+.leftcol20[
+
+&lt;br&gt;
+&lt;br&gt;
+&lt;br&gt;
+
+**$$y = \color{blue}{\alpha} + \color{purple}{\epsilon_i}$$**
+
+
+]
+
+
+.rightcol80[
+
+
+&lt;img src="index_files/figure-html/unnamed-chunk-7-1.png" width="720" /&gt;
+
+]
+
+
+
+
+---
+
+class: white
+
+### Linear Regression IV - Slope
+
+
+.leftcol20[
+
+&lt;br&gt;
+&lt;br&gt;
+&lt;br&gt;
+
+**$$y = \color{blue}{\alpha} +  \color{lightgreen}{\beta} \times X + \color{purple}{\epsilon_i}$$**
+
+
+]
+
+
+.rightcol80[
+
+
+&lt;img src="index_files/figure-html/unnamed-chunk-8-1.png" width="720" /&gt;
+
+]
+
+
+---
+
+class: white
+
+### Linear Regression V - Slope
+
+
+.leftcol20[
+
+&lt;br&gt;
+&lt;br&gt;
+&lt;br&gt;
+
+**$$y = \color{blue}{\alpha} +  \color{lightgreen}{\beta} \times X + \color{purple}{\epsilon_i}$$**
+
+
+]
+
+
+.rightcol80[
+
+
+&lt;img src="index_files/figure-html/unnamed-chunk-9-1.png" width="720" /&gt;
+
+]
+
+---
+
+class: black, middle, center
+
+## .onehundredtwenty[.green[.matrix[Enter the M U L T I L E V E L]]]
+
+![](https://c.tenor.com/KBe_nw4IL2QAAAAC/matrix-code.gif)
+
+
+
+---
+
+class: white
+
+
+### Multilevel Data I 
+
+
+
+
+.leftcol30[
+
+&lt;br&gt;
+&lt;br&gt;
+&lt;br&gt;
+
+Now, we have the same dataset as before.
+
+
+
+]
+
+
+.rightcol70[
+
+
+&lt;img src="index_files/figure-html/unnamed-chunk-10-1.png" width="720" /&gt;
+
+]
+
+
+---
+
+class: white
+
+### Multilevel Data II
+
+
+.leftcol30[
+
+&lt;br&gt;
+&lt;br&gt;
+&lt;br&gt;
+
+Now, we have the same dataset as before. 
+
+But this time we introduce a multilevel data structure, i.e. our data points are **nested** in *six other groups*.
+
+
+]
+
+
+.rightcol70[
+
+
+&lt;img src="index_files/figure-html/unnamed-chunk-11-1.png" width="720" /&gt;
+
+]
+
+
+
+---
+
+
+class: white
+
+### Multilevel - Random Intercepts I - Null Model
+
+
+.leftcol30[
+
+
+First, we estimate a **null model** again. 
+
+In a multilevel context this means estimating a **random intercept** only model, without any predictors. 
+
+Notice how each group gets their own intercept. 
+
+The intercept in thick blue is called the *grand mean* and shows the average intercept across all groups.
+
+
+]
+
+
+.rightcol70[
+
+
+&lt;img src="index_files/figure-html/unnamed-chunk-12-1.png" width="720" /&gt;
+
+]
+
+
+---
+
+class: white
+
+### Multilevel - Random Intercepts II - Null Model
+
+
+.leftcol30[
+
+&lt;br&gt;
+&lt;br&gt;
+&lt;br&gt;
+
+The null model introduces an error term relating to each intercept.
+
+This shows the **within-group** variation.
+
+
+]
+
+
+.rightcol70[
+
+
+&lt;img src="index_files/figure-html/unnamed-chunk-13-1.png" width="720" /&gt;
+
+]
+
+
+
+---
+
+class: white
+
+### Multilevel - Random Intercepts III - Null Model
+
+
+.leftcol30[
+
+&lt;br&gt;
+&lt;br&gt;
+&lt;br&gt;
+
+We've also introduced an error term for each group intercept, i.e. differences between the grand mean and other group-specific intercepts.
+
+This shows the **between-group** variation.
+
+
+]
+
+
+.rightcol70[
+
+
+&lt;img src="index_files/figure-html/unnamed-chunk-14-1.png" width="720" /&gt;
+
+]
+
+---
+
+class: white, middle, center
+
+### Multilevel - Random Intercepts - Fixed Slope
+
+Varying starting point (intercept), same slope for each group.
+
+---
+
+class: white
+
+### Multilevel - Random Intercepts - Fixed Slope I
+
+
+
+.leftcol30[
+
+&lt;br&gt;
+&lt;br&gt;
+&lt;br&gt;
+
+We now introduce a dependent variable `\(x\)` to our multilevel model but keep it fixed, i.e. it is the same across all groups.
+
+The thick blue line shows the group-adjusted slope.
+
+
+]
+
+
+.rightcol70[
+
+
+&lt;img src="index_files/figure-html/unnamed-chunk-15-1.png" width="720" /&gt;
+
+]
+
+
+---
+
+class: white
+
+### Multilevel - Random Intercepts - Fixed Slope II
+
+
+
+.leftcol30[
+
+&lt;br&gt;
+&lt;br&gt;
+&lt;br&gt;
+
+The slope is held constant across all of our groups.
+
+
+]
+
+
+.rightcol70[
+
+
+&lt;img src="index_files/figure-html/unnamed-chunk-16-1.png" width="720" /&gt;
+
+]
+
+
+
+---
+
+
+class: white
+
+### Multilevel - Random Intercepts - Fixed Slope III
+
+
+
+.leftcol30[
+
+&lt;br&gt;
+&lt;br&gt;
+&lt;br&gt;
+
+Again, in a multilevel model, error terms for individual data points are estimated by group.
+
+This shows the **within-group** variation.
+
+]
+
+
+.rightcol70[
+
+
+&lt;img src="index_files/figure-html/unnamed-chunk-17-1.png" width="720" /&gt;
+
+]
+
+
+---
+
+
+class: white
+
+### Multilevel - Random Intercepts - Fixed Slope IV
+
+.leftcol30[
+
+&lt;br&gt;
+&lt;br&gt;
+&lt;br&gt;
+
+And similar as before, we have an error term for the random intercept.
+
+This shows the **between-group** variation.
+
+]
+
+
+.rightcol70[
+
+
+&lt;img src="index_files/figure-html/unnamed-chunk-18-1.png" width="720" /&gt;
+
+]
+
+---
+
+
+class: white, middle, center
+
+### Multilevel - Random Intercepts - Random Slope
+
+Varying starting point (intercept) **and** slope per group.
+
+![](https://c.tenor.com/EYPJjOVJOHYAAAAC/inception-deeper.gif)
+
+---
+
+class: white
+
+### Multilevel - Random Intercepts - Fixed Slope V
+
+
+
+.leftcol30[
+
+&lt;br&gt;
+&lt;br&gt;
+&lt;br&gt;
+
+First, let's consider the random-intercept, fixed slope model again.
+
+All slopes are held constant, i.e. in each group we assume the same effect of x on y.
+
+Is this really a reasonable assumption?
+
+
+]
+
+
+.rightcol70[
+
+
+&lt;img src="index_files/figure-html/unnamed-chunk-19-1.png" width="720" /&gt;
+
+]
+
+---
+
+
+class: white
+
+### Multilevel - Random Intercepts - Random Slope I
+
+.leftcol30[
+
+&lt;br&gt;
+&lt;br&gt;
+&lt;br&gt;
+
+Instead we may introduce **random slopes** and let the slope vary by group.
+
+We can see that it some groups the relationship is *less positive*, *more positive* or even *negative* when allowing the slopes to vary.
+
+
+]
+
+
+.rightcol70[
+
+
+&lt;img src="index_files/figure-html/unnamed-chunk-20-1.png" width="720" /&gt;
+
+]
+
+
+
+
+
+---
+
+class: white
+
+### Multilevel - Random Intercepts - Random Slope II
+
+.leftcol30[
+
+&lt;br&gt;
+&lt;br&gt;
+&lt;br&gt;
+
+That is because in addition to all previous error terms, we are also adding an error term for each slope.
+
+The dotted lines are fixed slopes. The arrows show the added error term for each random slope.
+
+
+]
+
+
+.rightcol70[
+
+
+&lt;img src="index_files/figure-html/unnamed-chunk-21-1.png" width="720" /&gt;
+
+]
+
+
+---
+
+class: white, middle, center
+
+### How to estimate Multilevel Models
+
+
+Let's get to some coding!
+
+![](https://c.tenor.com/pnK2MIoEAccAAAAC/hadley-wickham.gif)
+
+
+For that, we will be using the `lme4` package in R.
+
+
+---
+
+### How to estimate Multilevel Models
+
+1. Null Model (Random Intercept only)
+
+  a. Check ICC
+  
+2. Add independent variables
+
+3. Add random slopes
+
+4. (Cross-level) interactions
+
+
+Each step, check whether your model is significantly improved compared to the previous one.
+
+---
+
+### How to estimate Multilevel Models
+
+For this section, we will use some **real data**:
+
+The European Social Survey Round 9 (2018)
+
+&lt;img src="https://sshopencloud.eu/sites/default/files/ESS-logo.png" width="25%"&gt;
+
+The dependent variable is `income` (Household's total net income, all sources).
+
+The independent variable is `education` (Highest level of education).
+
+---
+
+### How to estimate Multilevel Models
+
+
+```r
+library(lme4)
+
+
+null_model &lt;- lmer(income ~ (1|cntry), data = ess)
+```
+
+--
+
+We use the function `lmer`.
+
+First we specify the dependent variable `income`. 
+
+&lt;!-- Next we specify our independent variables: in our case that is only one, `education`. --&gt;
+
+Finally, we specify the *random* part of our equation within the brackets.
+
++ The first part in the brackets (`1`) refers to the random slope. `1` just says: hold the slope constant, i.e. no random slope.
+
++ The second part in the brackets (`cntry`) specifies the random intercepts, i.e. by which group we want the data to vary. 
+
+---
+
+### How to estimate Multilevel Models
+
+.pull-left[.seventy[
+1. Estimate a Null Model
+
+
+```r
+summary(null_model)
+```
+
+]
+
+.code70[
+
+```r
+## Linear mixed model fit by REML ['lmerMod']
+## Formula: income ~ (1 | cntry)
+##    Data: ess
+## 
+## REML criterion at convergence: 192747.2
+## 
+## Scaled residuals: 
+##      Min       1Q   Median       3Q      Max 
+## -2.04459 -0.83526 -0.04533  0.84496  2.24247 
+## 
+## Random effects:
+##  Groups   Name        Variance Std.Dev.
+##  cntry    (Intercept) 0.408    0.6387  
+##  Residual             7.345    2.7101  
+## Number of obs: 39865, groups:  cntry, 29
+## 
+## Fixed effects:
+##             Estimate Std. Error t value
+## (Intercept)   5.2365     0.1195   43.83
+```
+
+]
+
+
+]
+
+
+.pull-right[
+
+
+
+]
+
+
+---
+
+### How to estimate Multilevel Models
+
+.pull-left[.seventy[
+1. Estimate a Null Model
+
+
+```r
+summary(null_model)
+```
+
+]
+
+.code70[
+
+```r
+## Linear mixed model fit by REML ['lmerMod']
+## Formula: income ~ (1 | cntry)
+##    Data: ess
+## 
+*## REML criterion at convergence: 192747.2
+## 
+## Scaled residuals: 
+##      Min       1Q   Median       3Q      Max 
+## -2.04459 -0.83526 -0.04533  0.84496  2.24247 
+## 
+## Random effects:
+##  Groups   Name        Variance Std.Dev.
+##  cntry    (Intercept) 0.408    0.6387  
+##  Residual             7.345    2.7101  
+## Number of obs: 39865, groups:  cntry, 29
+## 
+## Fixed effects:
+##             Estimate Std. Error t value
+## (Intercept)   5.2365     0.1195   43.83
+```
+
+]
+
+
+]
+
+
+.pull-right[
+
+
+
+]
+
+
+---
+
+---
+
+### How to estimate Multilevel Models
+
+.pull-left[.seventy[
+1. Estimate a Null Model
+
+
+```r
+summary(null_model)
+```
+
+]
+
+.code70[
+
+```r
+## Linear mixed model fit by REML ['lmerMod']
+## Formula: income ~ (1 | cntry)
+##    Data: ess
+## 
+## REML criterion at convergence: 192747.2 
+## 
+*## Scaled residuals:
+*##      Min       1Q   Median       3Q      Max
+*## -2.04459 -0.83526 -0.04533  0.84496  2.24247
+## 
+## Random effects:
+##  Groups   Name        Variance Std.Dev.
+##  cntry    (Intercept) 0.408    0.6387  
+##  Residual             7.345    2.7101  
+## Number of obs: 39865, groups:  cntry, 29
+## 
+## Fixed effects:
+##             Estimate Std. Error t value
+## (Intercept)   5.2365     0.1195   43.83
+```
+
+]
+
+
+]
+
+
+.pull-right[
+
+
+
+]
+
+
+---
+
+
+### Calculate ICC
+
+Determine how much variance is on Level 2 (to see whether a multilevel model is justfied).
+
+`$$ICC = \frac{Variance_{L2}}{Variance_{L2}+Variance_{L1}}$$`
+
+```r
+library(performance)
+
+icc(null_model)
+```
+
+```
+## # Intraclass Correlation Coefficient
+## 
+##      Adjusted ICC: 0.053
+##   Conditional ICC: 0.053
+```
+
+```r
+ranef(null_model)
+```
+
+```
+## $cntry
+##    (Intercept)
+## AT -0.27735419
+## BE  0.46086945
+## BG -0.97287049
+## CH  0.23502703
+## CY -0.61806163
+## CZ  0.07008438
+## DE  0.82867884
+## DK  0.31099903
+## EE  0.36097533
+## ES -0.11363524
+## FI  0.82479797
+## FR -0.24188036
+## GB -0.03005056
+## HR -0.52641570
+## HU -0.08307863
+## IE -0.62841924
+## IS  1.01811849
+## IT -0.45473338
+## LT -1.20506317
+## LV -1.31375102
+## ME  0.06398313
+## NL  1.30449511
+## NO  0.27322079
+## PL  0.14117766
+## PT  0.02708136
+## RS -0.54617224
+## SE  0.82274671
+## SI  0.09022048
+## SK  0.17901010
+## 
+## with conditional variances for "cntry"
+```
+
+```r
+sjPlot::get_model_data(null_model, type = "re") %&gt;% 
+  mutate(term = fct_reorder(term, estimate)) %&gt;% 
+  ggplot(aes(term, estimate)) +
+  geom_point() +
+  geom_linerange(aes(ymin = conf.low, ymax = conf.high)) +
+  coord_flip()
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-30-1.png" width="504" /&gt;
+
+
+---
+
+### Visualize Random Intercept
+
+---
+
+class: white
+
+### Data Structures
+
+
+.panelset.sideways.right[
+.panel[.panel-name[&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;From this data we may conclude that *x is **positively** correlated with y*.]
+
+.seventy[You might be used to your data looking like this: An independent variable `\(x\)` and a dependent variable `\(y\)`.]
+
+
+&lt;img src="index_files/figure-html/unnamed-chunk-31-1.png" width="720" /&gt;
+
+
+
+]]
+
+---
+
+.panel[
+.panel-name[
+Plot about Orange Trees
+]
+
+.seventy[However, if we introduce *groupings* of the data, a different picture emerges.]
+
+
+&lt;img src="index_files/figure-html/unnamed-chunk-32-1.png" width="720" /&gt;
+
+.seventy[In each of the groupings we find a ***negative** correlation between x and y*.]
+
+
+]
+
+.panel[
+.panel-name[
+Plot about Orange Trees
+]
+
+&lt;img src="index_files/figure-html/unnamed-chunk-33-1.png" width="720" /&gt;
+]
+
+]
+
+---
+
+class: white
+
+### Data Structures
+
+.pull-left[
+
+
+.eightyfive[You might be used to your data looking like this: An independent variable `\(x\)` and a dependent variable `\(y\)`.]
+
+&lt;img src="index_files/figure-html/unnamed-chunk-34-1.png" width="720" /&gt;
+
+]
+
+.eightyfive[From this data we may conclude that *x is **positively** correlated with y*.]
+
+---
+
+class: white
+
+### Data Structures
+
+
+.eightyfive[However, if we introduce *groupings* of the data, a different picture emerges.]
+
+&lt;img src="index_files/figure-html/unnamed-chunk-35-1.png" width="720" /&gt;
+
+
+.eightyfive[In each of the groupings we find a ***negative** correlation between x and y*.]
+
+
+---
+
+class: white
+
+### Data Structures
+
+.pull-left[
+.eightyfive[You might be used to your data looking like this: An independent variable `\(x\)` and a dependent variable `\(y\)`.]
+
+&lt;img src="index_files/figure-html/unnamed-chunk-36-1.png" width="432" /&gt;
+]
+
+--
+
+.pull-right[
+However, if we introduce *groupings* of the data, a different picture emerges.
+
+&lt;img src="index_files/figure-html/unnamed-chunk-37-1.png" width="432" /&gt;
+]
+
+
+
+---
+
+# Heading 1
+
+You can use several heading levels
+
+### Heading 2
+
+This is text under a second level heading. And some **bold** and  _italics_ text.
+
+#### Heading 3
+
+It's also easy to add `\(\LaTeX\)` code
+$$x^n + y^n = z^n $$
+
+Three dashes make a new slide
+
+---
+
+
+# Heading 1
+
+- something  
+- something more
+
+1. numbered lists
+1. number two list
+
+---
+
+### Add some R code
+
+
+```r
+summary(mtcars)
+```
+
+```
+##       mpg             cyl             disp             hp       
+##  Min.   :10.40   Min.   :4.000   Min.   : 71.1   Min.   : 52.0  
+##  1st Qu.:15.43   1st Qu.:4.000   1st Qu.:120.8   1st Qu.: 96.5  
+##  Median :19.20   Median :6.000   Median :196.3   Median :123.0  
+##  Mean   :20.09   Mean   :6.188   Mean   :230.7   Mean   :146.7  
+##  3rd Qu.:22.80   3rd Qu.:8.000   3rd Qu.:326.0   3rd Qu.:180.0  
+##  Max.   :33.90   Max.   :8.000   Max.   :472.0   Max.   :335.0  
+##       drat             wt             qsec             vs        
+##  Min.   :2.760   Min.   :1.513   Min.   :14.50   Min.   :0.0000  
+##  1st Qu.:3.080   1st Qu.:2.581   1st Qu.:16.89   1st Qu.:0.0000  
+##  Median :3.695   Median :3.325   Median :17.71   Median :0.0000  
+##  Mean   :3.597   Mean   :3.217   Mean   :17.85   Mean   :0.4375  
+##  3rd Qu.:3.920   3rd Qu.:3.610   3rd Qu.:18.90   3rd Qu.:1.0000  
+##  Max.   :4.930   Max.   :5.424   Max.   :22.90   Max.   :1.0000  
+##        am              gear            carb      
+##  Min.   :0.0000   Min.   :3.000   Min.   :1.000  
+##  1st Qu.:0.0000   1st Qu.:3.000   1st Qu.:2.000  
+##  Median :0.0000   Median :4.000   Median :2.000  
+##  Mean   :0.4062   Mean   :3.688   Mean   :2.812  
+##  3rd Qu.:1.0000   3rd Qu.:4.000   3rd Qu.:4.000  
+##  Max.   :1.0000   Max.   :5.000   Max.   :8.000
+```
+
+---
+
+### Add cool gifs to your slides!
+
+
+![](https://s4.gifyu.com/images/ezgif-4-d64ba87b438c.gif)
+
+---
+
+### Create two columns
+
+.pull-left[
+
+This text goes in the left column.
+
+![](https://s4.gifyu.com/images/ezgif-4-d64ba87b438c.gif)
+
+]
+
+.pull-right[
+
+This text goes in the right column.
+
+![](https://s4.gifyu.com/images/ezgif-4-d64ba87b438c.gif)
+
+
+]
+
+
+
+---
+
+class: middle, center
+
+# You can also create *special* slides
+
+
+For example:
+
+`class: white`
+
+gives you a white background rather than a babyblue one. 
+
+This comes in handy for graphs (with white backgrounds).
+
+---
+
+class: white
+
+#### add `class: white`
+
+
+
+
+
+
+```r
+ggplot(diamonds, aes(x = carat, y = price, color = clarity)) +
+  geom_point() +
+  theme_minimal() 
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-40-1.png" width="720" /&gt;
+
+
+---
+
+class: black, middle
+
+# a black slide with middle centering
+
+using `class: black`
+
+
+---
+
+class: black
+
+# Heading 1
+
+### Heading 2
+
+#### Heading 3
+
+- something  
+- something more
+
+1. numbered lists
+1. number two list
+
+---
+
+layout: false
+class: title-slide
+
+&lt;br&gt;
+
+### You can also load in the title slide again
+
+adding `layout: false` cancels the logo for all slides following it
+
+---
+
+layout: true
+&lt;div class="logo"&gt;&lt;/div&gt; 
+
+&lt;!-- Re-add logo by adding a blank slide with this content --&gt;
+---
+
+But it can be re-added  using a slide with 
+
+```bash
+layout: true
+&lt;div class="logo"&gt;&lt;/div&gt; 
+```
+
+at the top.
+
+---
+
+# Hope you find this useful!
+
+
+.pull-left[
+
+![](https://media.tenor.com/images/abf1057f2d6774fa38997e8987f18949/tenor.gif)
+![](https://media.tenor.com/images/abf1057f2d6774fa38997e8987f18949/tenor.gif)
+
+![](https://media.tenor.com/images/abf1057f2d6774fa38997e8987f18949/tenor.gif)
+![](https://media.tenor.com/images/abf1057f2d6774fa38997e8987f18949/tenor.gif)
+
+![](https://media.tenor.com/images/abf1057f2d6774fa38997e8987f18949/tenor.gif)
+![](https://media.tenor.com/images/abf1057f2d6774fa38997e8987f18949/tenor.gif)
+
+
+]
+
+.pull-right[
+
+![](https://media.tenor.com/images/abf1057f2d6774fa38997e8987f18949/tenor.gif)
+![](https://media.tenor.com/images/abf1057f2d6774fa38997e8987f18949/tenor.gif)
+
+![](https://media.tenor.com/images/abf1057f2d6774fa38997e8987f18949/tenor.gif)
+![](https://media.tenor.com/images/abf1057f2d6774fa38997e8987f18949/tenor.gif)
+
+![](https://media.tenor.com/images/abf1057f2d6774fa38997e8987f18949/tenor.gif)
+![](https://media.tenor.com/images/abf1057f2d6774fa38997e8987f18949/tenor.gif)
+
+
+]
+
+
+
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false,
+"slideNumberFormat": "%current%",
+"ratio": "16:9"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

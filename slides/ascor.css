@@ -1,0 +1,331 @@
+
+
+/**************/
+/**** text ****/
+/**************/
+body { font-family: Verdana, Helvetica, sans-serif;}
+
+h1, h2, h3 {
+  font-family: Verdana, Serif;
+  font-weight: normal;
+  text-shadow: none;
+}
+
+h1 {
+  color: #fff;
+  font-size: 2em;
+}
+
+h2, h3 {
+  color: #e22;
+}
+
+p,  a,  code {
+  font-size: 1.0em;
+  color: #000;
+}
+
+ul, li {
+  font-size: 1em;
+  color: #000;
+}
+
+a, a > code {
+  color: #FF0000;
+}
+
+ul li::marker {
+  color: #ff0000; !important
+}
+
+
+/**********/
+/* remark */
+/**********/
+.remark-code-line-highlighted {
+  background-color: #FF000060;
+}
+
+.remark-slide-content {
+  border-top:    20px solid white;
+  border-left:  20px solid white;
+  border-bottom: 20px solid white;
+  background-color: #eff;
+}
+
+.remark-slide-content > h1 {
+  color: #e22;
+}
+
+.remark-slide-number {
+  font-size: 14pt;
+  margin-right: 10px;
+  margin-bottom: 14px;
+}
+
+.middle {
+  border: none;
+}
+
+.no-border {
+  border: none; !important
+}
+
+
+/***************/
+/* title slide */
+/***************/
+
+.title-slide {
+  background-color: #eff ;
+  padding: 30px ;
+  background-origin: padding-box;
+  background-size: 100%, 100%;
+  background-position: 100% 0%, left;
+  background-image:  url("ascor_header.png");
+  border: 20px solid white ;
+}
+
+.title-slide h1,
+.title-slide h2,
+.title-slide h3{
+  border: none;
+  color: #e22;
+  text-shadow: none;
+}
+
+
+.title-slide .remark-slide-number {
+  display: none;
+}
+
+/***************/
+/***** red *****/
+/***************/
+.red {
+  border-color: #e22;
+  text-shadow: none;
+}
+
+.red h1 {
+  color: #fff;
+}
+
+.middle.red,
+.red.middle {
+  background-color: #e22;
+}
+
+.middle.red h1,
+.red.middle h1,
+.middle.red h2,
+.red.middle h2,
+.middle.red h3,
+.red.middle h3,
+.red.middle p {
+  color: #fff;
+}
+
+.red  h1,
+.red  h2,
+.red  h3{
+  border: none;
+  color: #000;
+  text-shadow: none;
+}
+
+.red.middle ul > li::marker ,
+.middle.red ul > li::marker {
+  color: #fff;
+}
+
+/***************/
+/**** black ****/
+/***************/
+.black {
+  background-color: #000;
+  border-color: #fff;
+  text-shadow: none;
+  color: #fff;
+}
+
+
+.black  h1,
+.black  h2,
+.black  h3{
+  border: none;
+  color: #fff;
+  text-shadow: none;
+}
+
+.black p,
+.black a,
+.black code {
+  font-size: 1em;
+  color: #fff;
+}
+
+
+.black ul,
+.black li {
+  font-size: 1em;
+  color: #fff;
+}
+
+
+
+ul li::marker {
+  color: #ff0000; !important
+}
+
+/***************/
+/**** white ****/
+/***************/
+
+.white {
+  background-color: #fff;
+  border-color: #fff;
+  text-shadow: none;
+  color: #000;
+}
+
+
+
+
+/************************/
+/* Logo on the side div */
+/************************/
+div.logo {
+    position: fixed;
+    left: 69%;
+    bottom: 45%;
+    height: 2.5em;
+    width: calc(100% * .55); /* fix sidebar height */
+    padding: 0.5em;
+    opacity: 0.7;
+    background-color: #fff;
+    background-position: right;
+    background-origin: content-box;
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-image: url("ascor_side.png"),
+    linear-gradient(70deg, #fff, #ffffff00 30%);
+    transform: rotate(-90deg);
+}
+
+
+
+/*--- COLUMN LAYOUTS ---*/
+
+.cols3 {
+  width: 32%;
+  float: left;
+  text-align: left;
+  margin-left: 5px;
+  margin-right: 5px;
+}
+.leftcol {
+  float: left;
+  width: 49%;
+}
+.rightcol {
+  float: right;
+  width: 49%;
+}
+.leftcol55 {
+  float: left;
+  width: 54%;
+}
+.rightcol45 {
+  float: right;
+  width: 44%;
+}
+.leftcol45 {
+  float: left;
+  width: 44%;
+}
+.rightcol55 {
+  float: right;
+  width: 54%;
+}
+.leftcol60 {
+  float: left;
+  width: 59%;
+}
+.rightcol40 {
+  float: right;
+  width: 39%;
+}
+.leftcol40 {
+  float: left;
+  width: 39%;
+}
+.rightcol60 {
+  float: right;
+  width: 59%;
+}
+.leftcol65 {
+  float: left;
+  width: 64%;
+}
+.rightcol35 {
+  float: right;
+  width: 34%;
+}
+.leftcol35 {
+  float: left;
+  width: 34%;
+}
+.rightcol65 {
+  float: right;
+  width: 64%;
+}
+.leftcol70 {
+  float: left;
+  width: 69%;
+}
+.rightcol30 {
+  float: right;
+  width: 29%;
+}
+.leftcol30 {
+  float: left;
+  width: 29%;
+}
+.rightcol70 {
+  float: right;
+  width: 69%;
+}
+.leftcol75 {
+  float: left;
+  width: 74%;
+}
+.rightcol25 {
+  float: right;
+  width: 25%;
+}
+.leftcol25 {
+  float: left;
+  width: 25%;
+}
+.rightcol75 {
+  float: right;
+  width: 74%;
+}
+.leftcol80 {
+  float: left;
+  width: 79%;
+}
+.rightcol20 {
+  float: right;
+  width: 19%;
+}
+.leftcol20 {
+  float: left;
+  width: 19%;
+}
+.rightcol80 {
+  float: right;
+  width: 79%;
+}
+
