@@ -18,7 +18,7 @@
 class: bottom, left, title-slide
 
 # A .fancy[fun] intro to Multilevel Models in R
-## ’<em>What’s so random about these slopes anyway?’</em>
+## ’<em>What’s so random about these effects anyway?’</em>
 ### Fabio Votta
 ### 2022-02-22
 
@@ -245,7 +245,7 @@ We might have students **nested** in schools
 
 ![](img/Slide1.PNG)
 
-.eighty[Students on the *first level*, schools on the *second level*]
+.eighty[Students on the **first level**, schools on the **second level**]
 ]
 
 --
@@ -256,7 +256,7 @@ Or timepoints **nested** in people
 
 ![](img/Slide2.PNG)
 
-.eighty[Timepoints on the *first level*, people on the *second level*]
+.eighty[Timepoints on the **first level**, people on the **second level**]
 ]
 
 --
@@ -295,9 +295,7 @@ class: white
 .fifty[Elaborate sketch of a multilevel data structure]
 ]
 
-
 &lt;!-- &lt;img src="img/elaborate.png" width="60%"&gt; --&gt;
-
 
 ---
 
@@ -305,44 +303,90 @@ class: white
 
 --
 
-+ Control for multilevel structures: your data may have
++ **Explicitly model multilevel structure**: your data may have
   + different average levels of your dependent and independent variables
-  + how does your effect of interest vary by group?
+  + different effects varying by group
   
-+ More accurate calculation of standard errors
-  + Standard linear regression assumes independence of cases and errors
+--
 
-+ Estimate group-level predictors and cross-level interactions
-  + for example, how is the GDP of a country associated with individual-level variables
++ Needed for **correct inference** 
+  + Nested data violate key assumptions of OLS
+    + Independent observations
+    + Independent error terms
+    + e.g. cases within a country more similar than between
+  + Multilevel model accounts for this
+    
+--
+
++ Answer **unique research questions**
+  + Estimate group-level predictors and cross-level interactions
+  + for example, how is the corruption of a country associated with individual-level variables like attitudes
+  + how does your effect of interest vary by country/neighborhood/family/over time?
+
 
 
 ---
 
-### What is a Multilevel Model
+### Random vs. Fixed Effects
 
-+ Maximum Likelihood
+**Fixed effects** are effects assumed to be constant, i.e. they **do not vary**.
 
-+ Estimate a model per group
+**Random effects** are assumed to vary by some context, i.e. they **do vary**
 
-+ Fixed and random effects
+--
 
-+ Random intercepts and random slopes
+&lt;center&gt;
 
+&lt;img src="https://media3.giphy.com/media/7A4KXR7DeBjfsG67SH/giphy.gif?cid=ecf05e47c59k3fuqrjtp0cqg7c0ya9fvsrmqr5jvrizzidhx&amp;rid=giphy.gif&amp;ct=g"&gt;
+
+&lt;/center&gt;
+
+---
+
+
+### Short note
+
+Multilevel models are based on *Maximum Likelihood estimation* (like logistic regression)
+
+&gt; Maximum likelihood estimation is a method that determines values for the parameters of a model. The parameter values are found such that they **maximise the likelihood** that the process described by the model produced the data that were actually observed.
+
+.fifty[Jonny Brooks-Bartlett 2018]
+
+--
+
+For our purposes this means:
+
+**No direct estimation of `\(R^2\)`.**
+
+**Models may not converge.**
 
 ---
 
 ### What is a model?
 
-A simplified but informative representation of a phenomena.
+--
+
+&gt; A simplified but informative representation of a phenomena.
+
+--
 
 This is a simple linear regressions:
 
-$$y = \color{blue}{\alpha} +  \color{lightgreen}{\beta} \times X + \color{purple}{\epsilon_i} $$
+`$$y = \color{blue}{\alpha} + \color{lightgreen}{\beta} \times X + \color{purple}{\epsilon_i}$$`
+-- 
 
-This is a Null Model:
+And this is a Null Model:
 
 `$$y = \color{blue}{\alpha} + \color{purple}{\epsilon_i}$$`
+The null model basically models the mean of a dependent variable.
 
+---
+
+class: white, middle, center
+
+### .fancy[Short excourse]
+
+Let's start simple by estimating the null model of a linear regression (i.e. the mean)
 
 ---
 
@@ -385,6 +429,7 @@ class: white
 
 **$$y = \color{blue}{\alpha} + \color{purple}{\epsilon_i}$$**
 
+We estimate a linear regression with no predictors and plot the intercept.
 
 ]
 
@@ -411,6 +456,7 @@ class: white
 
 **$$y = \color{blue}{\alpha} + \color{purple}{\epsilon_i}$$**
 
+Purple indicates the error term for each observation.
 
 ]
 
@@ -438,8 +484,9 @@ class: white
 &lt;br&gt;
 &lt;br&gt;
 
-**$$y = \color{blue}{\alpha} +  \color{lightgreen}{\beta} \times X + \color{purple}{\epsilon_i}$$**
+**$$y = \color{blue}{\alpha} +  \color{green}{\beta} \times X + \color{purple}{\epsilon_i}$$**
 
+We now also add a predictor.
 
 ]
 
@@ -486,9 +533,8 @@ class: black, middle, center
 
 ![](https://c.tenor.com/KBe_nw4IL2QAAAAC/matrix-code.gif)
 
-
-
 ---
+
 
 class: white
 
@@ -789,9 +835,9 @@ class: white
 
 First, let's consider the random-intercept, fixed slope model again.
 
-All slopes are held constant, i.e. in each group we assume the same effect of x on y.
+All slopes are held constant, i.e. in each group **we assume the same effect of x on y**.
 
-Is this really a reasonable assumption?
+*Is this really a reasonable assumption?*
 
 
 ]
@@ -866,20 +912,6 @@ The dotted lines are fixed slopes. The arrows show the added error term for each
 
 ---
 
-class: white, middle, center
-
-### Null Model
-
-
-Let's get to some coding!
-
-![](https://c.tenor.com/pnK2MIoEAccAAAAC/hadley-wickham.gif)
-
-
-For that, we will be using the `lme4` package in R.
-
-
----
 
 ### Modelling Strategy
 
@@ -915,6 +947,19 @@ The independent variable is `education` (Highest level of education).
 
 ---
 
+class: center
+
+### Let's get to some coding!
+
+![](https://c.tenor.com/pnK2MIoEAccAAAAC/hadley-wickham.gif)
+
+
+For that, we will be using the `lme4` package in R.
+
+
+---
+
+
 class: white, middle, center
 
 ### Estimating Multilevel Models - Null Model
@@ -922,6 +967,7 @@ class: white, middle, center
 Varying intercept for each country
 
 ---
+
 
 
 ### Estimating Multilevel Models - Null Model
@@ -1088,72 +1134,7 @@ null_model &lt;- lmer(income ~ (1|cntry), data = ess)
 ### Null Model - `summary()`
 
 .pull-left[.seventy[
-1. Estimate a Null Model
-
-
-```r
-summary(null_model)
-```
-
-]
-
-.code70[
-
-```r
-## Linear mixed model fit by REML ['lmerMod']
-## Formula: income ~ (1 | cntry)
-##    Data: ess
-## 
-## REML criterion at convergence: 192022.4
-## 
-## Scaled residuals: 
-##      Min       1Q   Median       3Q      Max 
-## -2.04751 -0.83510 -0.04548  0.84470  2.24208 
-## 
-## Random effects:
-##  Groups   Name        Variance Std.Dev.
-##  cntry    (Intercept) 0.4094   0.6398  
-##  Residual             7.3472   2.7106  
-## Number of obs: 39712, groups:  cntry, 29
-## 
-## Fixed effects:
-##             Estimate Std. Error t value
-## (Intercept)   5.2377     0.1197   43.77
-```
-
-]
-
-
-]
-
-
-.pull-right[
-
-
-.eightyfive[
-
-
-There are three parts in this output
-
-1.) Some meta info about your model 
-
-  + generally not as important to consider
-
-2.) Group-Level statistics
-
-3.) Fixed Effects
-
-]
-
-]
-
-
----
-
-### Null Model - `summary()`
-
-.pull-left[.seventy[
-1. Estimate a Null Model
+Estimate a Null Model
 
 
 ```r
@@ -1198,20 +1179,14 @@ summary(null_model)
 .eightyfive[
 
 
-**1.) Meta Info**
+There are three parts in this output
 
-Formula and data used for estimation. 
+**1.) Some meta info about your model**
 
-This also states whether we are using Maximum Likelihood (ML) or Restricted Maximum Likelihood (REML) estimation. In our case, it is the latter.
-
-It also states the REML value at convergence (if it converges), value is not particularly important.
-
-Finally, we can also see some distribution metrics for the residuals of the metrics (also typically less important).
 
 ]
 
 ]
-
 
 
 ---
@@ -1219,7 +1194,7 @@ Finally, we can also see some distribution metrics for the residuals of the metr
 ### Null Model - `summary()`
 
 .pull-left[.seventy[
-1. Estimate a Null Model
+Estimate a Null Model
 
 
 ```r
@@ -1264,6 +1239,137 @@ summary(null_model)
 .eightyfive[
 
 
+There are three parts in this output
+
+**1.) Some meta info about your model**
+
+**2.) Group-Level statistics (random effects)**
+
+]
+
+]
+
+
+---
+
+
+
+### Null Model - `summary()`
+
+.pull-left[.seventy[
+Estimate a Null Model
+
+
+```r
+summary(null_model)
+```
+
+]
+
+.code70[
+
+```r
+*## Linear mixed model fit by REML ['lmerMod']
+*## Formula: income ~ (1 | cntry)
+*##    Data: ess
+## 
+*## REML criterion at convergence: 192022.4
+## 
+*## Scaled residuals:
+*##      Min       1Q   Median       3Q      Max
+*## -2.04751 -0.83510 -0.04548  0.84470  2.24208
+## 
+## Random effects:
+##  Groups   Name        Variance Std.Dev.
+##  cntry    (Intercept) 0.4094   0.6398  
+##  Residual             7.3472   2.7106  
+## Number of obs: 39712, groups:  cntry, 29
+## 
+## Fixed effects:
+##             Estimate Std. Error t value
+## (Intercept)   5.2377     0.1197   43.77
+```
+
+]
+
+
+]
+
+--
+
+.pull-right[
+
+
+.eightyfive[
+
+
+**1.) Meta Info**
+
+Formula and data used for estimation. 
+
+This also states whether we are using Maximum Likelihood (ML) or Restricted Maximum Likelihood (REML) estimation. In our case, it is the latter.
+
+It also states the REML value at convergence (if it converges), value is not particularly important.
+
+Finally, we can also see some distribution metrics for the residuals of the metrics (also typically less important).
+
+]
+
+]
+
+
+
+---
+
+### Null Model - `summary()`
+
+.pull-left[.seventy[
+Estimate a Null Model
+
+
+```r
+summary(null_model)
+```
+
+]
+
+.code70[
+
+```r
+## Linear mixed model fit by REML ['lmerMod']
+## Formula: income ~ (1 | cntry)
+##    Data: ess
+## 
+## REML criterion at convergence: 192022.4
+## 
+## Scaled residuals: 
+##      Min       1Q   Median       3Q      Max 
+## -2.04751 -0.83510 -0.04548  0.84470  2.24208 
+## 
+*## Random effects:
+*##  Groups   Name        Variance Std.Dev.
+*##  cntry    (Intercept) 0.4094   0.6398
+*##  Residual             7.3472   2.7106
+*## Number of obs: 39712, groups:  cntry, 29
+## 
+## Fixed effects:
+##             Estimate Std. Error t value
+## (Intercept)   5.2377     0.1197   43.77
+```
+
+]
+
+
+]
+
+--
+
+.pull-right[
+
+
+.eightyfive[
+
+
 
 **2.) Group-Level statistics**
 
@@ -1282,7 +1388,7 @@ This is interpreted in the following way:
 ### Null Model - `summary()`
 
 .pull-left[.seventy[
-1. Estimate a Null Model
+Estimate a Null Model
 
 
 ```r
@@ -1331,9 +1437,9 @@ This part states the random effects and its distribution.
 
 This is interpreted in the following way:
 
-1. Under `(Intercept)` we find the variance for the random intercept (per country: `cntry`). 
+1. Under `(Intercept)` we find the variance for the random intercept (per country: `cntry`), i.e. **between-group variance**. 
 
-  + The variance on the second level (country-level) is 0.40.
+  + The variance on the second level (country-level) is 0.41.
 
 ]
 
@@ -1349,77 +1455,7 @@ This is interpreted in the following way:
 ### Null Model - `summary()`
 
 .pull-left[.seventy[
-1. Estimate a Null Model
-
-
-```r
-summary(null_model)
-```
-
-]
-
-.code70[
-
-```r
-## Linear mixed model fit by REML ['lmerMod']
-## Formula: income ~ (1 | cntry)
-##    Data: ess
-## 
-## REML criterion at convergence: 192022.4
-## 
-## Scaled residuals: 
-##      Min       1Q   Median       3Q      Max 
-## -2.04751 -0.83510 -0.04548  0.84470  2.24208 
-## 
-*## Random effects:
-##  `Groups`   Name        `Variance` Std.Dev.     
-##  cntry    (Intercept) 0.4094   0.6398       
-##  `Residual`             `7.3472`   2.7106       
-## Number of obs: 39712, groups:  cntry, 29    
-## 
-## Fixed effects:
-##             Estimate Std. Error t value
-## (Intercept)   5.2377     0.1197   43.77
-```
-
-]
-
-
-]
-
-
-.pull-right[
-
-.eightyfive[
-
-**2.) Group-Level statistics**
-
-
-
-This part states the random effects and its distribution.
-
-This is interpreted in the following way:
-
-1. Under `(Intercept)` we find the variance for the random intercept (per country: `cntry`). 
-
-  + The variance on the second level (country-level) is 0.40.
-  
-2. Under `Residual` we find the variance on the level 1 (here: individuals).
-
-  + The variance on the first level is 7.35
-
-]
-
-]
-
-
----
-
-
-### Null Model - `summary()`
-
-.pull-left[.seventy[
-1. Estimate a Null Model
+Estimate a Null Model
 
 
 ```r
@@ -1470,11 +1506,14 @@ This is interpreted in the following way:
 
 1. Under `(Intercept)` we find the variance for the random intercept (per country: `cntry`), i.e. **between-group variance**. 
 
-  + The variance on the second level (country-level) is 0.40.
+  + The variance on the second level (country-level) is 0.41.
   
 2. Under `Residual` we find the variance on level 1 (here: individuals), i.e. **within-group variance**. 
 
   + The variance on the first level is 7.35
+  
+  
+This is in units of the *dependent variables*.
 
 ]
 
@@ -1487,7 +1526,7 @@ This is interpreted in the following way:
 ### Null Model - `summary()`
 
 .pull-left[.seventy[
-1. Estimate a Null Model
+Estimate a Null Model
 
 
 ```r
@@ -1561,7 +1600,7 @@ Typically, we say 10% of the variance should be on the second level to justify m
 ### Null Model - `summary()`
 
 .pull-left[.seventy[
-1. Estimate a Null Model
+Estimate a Null Model
 
 
 ```r
@@ -1603,11 +1642,18 @@ summary(null_model)
 .pull-right[
 
 
+.eightyfive[
 **2.) Group-Level statistics**
 
 
-This part shows the number of observations on Level 1 ($individuals_n = 39712$) and Level 2 ($countries_n = 29$).
+This part shows the number of observations on Level 1:
 
+`$$individuals_n = 39712$$`
+
+and Level 2: 
+
+`$$countries_n = 29$$`
+]
 
 ]
 
@@ -1618,7 +1664,7 @@ This part shows the number of observations on Level 1 ($individuals_n = 39712$) 
 ### Null Model - `summary()`
 
 .pull-left[.seventy[
-1. Estimate a Null Model
+Estimate a Null Model
 
 
 ```r
@@ -1659,11 +1705,15 @@ summary(null_model)
 
 .pull-right[
 
+.eightyfive[
+
 **3.) Fixed effects**
 
 This part tells us about the fixed effects. 
 
 The estimate for the intercept tells us that the grand mean of income (across all countries) is *5.24*.
+
+]
 
 ]
 
@@ -1812,6 +1862,13 @@ lvl1_preds_model &lt;- lmer(income `~ education` + (1|cntry), data = ess)
 
 Next we specify our independent variables: in our case that is only one, `education`.
 
+---
+
+### Estimating Multilevel Models - Level 1 Predictors
+
+.pull-left[
+
+
 .seventy[
 Estimate a Random Intercept - Fixed Slope model
 
@@ -1821,6 +1878,7 @@ summary(lvl1_preds_model)
 ```
 
 ]
+
 
 .code70[
 
@@ -1837,14 +1895,14 @@ summary(lvl1_preds_model)
 ## 
 ## Random effects:
 ##  Groups   Name        Variance Std.Dev.
-##  cntry    (Intercept) 0.3358   0.5795  
-##  Residual             6.3976   2.5293  
+##  cntry    (Intercept) 0.3358   0.5795    
+##  Residual             6.3976   2.5293    
 ## Number of obs: 39712, groups:  cntry, 29
 ## 
 ## Fixed effects:
 ##             Estimate Std. Error t value
 ## (Intercept)  2.57024    0.11385   22.57
-## education    0.78209    0.01018   76.80
+*## education    0.78209    0.01018   76.80
 ## 
 ## Correlation of Fixed Effects:
 ##           (Intr)
@@ -1853,6 +1911,16 @@ summary(lvl1_preds_model)
 
 ]
 
+
+]
+
+.pull-right[
+
+We now get a fixed effect for `education`. We can interpret this just like in a typical linear regression:
+
+&gt; *With every level of education household income increases by 0.78 income levels.*
+
+]
 
 ---
 
@@ -1914,6 +1982,89 @@ coef(lvl1_preds_model)
 
 ]
 
+
+---
+
+## Level 2 Predictors
+
+
+
+
+```r
+lvl2_preds_model &lt;- lmer(income ~ education `+ cpi +` (1|cntry), data = ess)
+```
+
+
+```r
+summary(lvl2_preds_model)
+```
+
+```
+## Linear mixed model fit by REML ['lmerMod']
+## Formula: income ~ education * gini_coef + (1 | cntry)
+##    Data: ess
+## 
+## REML criterion at convergence: 186536.8
+## 
+## Scaled residuals: 
+##      Min       1Q   Median       3Q      Max 
+## -2.70068 -0.78759 -0.03307  0.77245  2.94823 
+## 
+## Random effects:
+##  Groups   Name        Variance Std.Dev.
+##  cntry    (Intercept) 0.2523   0.5023  
+##  Residual             6.3975   2.5293  
+## Number of obs: 39712, groups:  cntry, 29
+## 
+## Fixed effects:
+##                      Estimate Std. Error t value
+## (Intercept)          4.851133   0.681906   7.114
+## education            0.700276   0.073745   9.496
+## gini_coef           -0.077052   0.022778  -3.383
+## education:gini_coef  0.002714   0.002434   1.115
+## 
+## Correlation of Fixed Effects:
+##             (Intr) eductn gin_cf
+## education   -0.368              
+## gini_coef   -0.989  0.358       
+## edctn:gn_cf  0.363 -0.990 -0.360
+```
+
+```r
+texreg::screenreg(lvl2_preds_model)
+```
+
+```
+## 
+## =====================================
+##                         Model 1      
+## -------------------------------------
+## (Intercept)                  4.85 ***
+##                             (0.68)   
+## education                    0.70 ***
+##                             (0.07)   
+## gini_coef                   -0.08 ***
+##                             (0.02)   
+## education:gini_coef          0.00    
+##                             (0.00)   
+## -------------------------------------
+## AIC                     186548.79    
+## BIC                     186600.33    
+## Log Likelihood          -93268.40    
+## Num. obs.                39712       
+## Num. groups: cntry          29       
+## Var: cntry (Intercept)       0.25    
+## Var: Residual                6.40    
+## =====================================
+## *** p &lt; 0.001; ** p &lt; 0.01; * p &lt; 0.05
+```
+
+```r
+sjPlot::plot_model(lvl2_preds_model, type = "int")
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-60-1.png" width="504" /&gt;
+
 ---
 
 class: white
@@ -1968,14 +2119,16 @@ ranef(lvl1_preds_model)
 
 .pull-right[
 
-&lt;img src="index_files/figure-html/unnamed-chunk-59-1.png" width="504" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-62-1.png" width="504" /&gt;
 
 
 ]
 
+
 ---
 
 ### Estimating Multilevel Models - Random Slope
+
 
 
 
@@ -1987,7 +2140,11 @@ rs_preds_model &lt;- lmer(income ~ education + (`education`|cntry), data = ess)
 
 Next we specify our random slope for `education`.
 
+---
 
+### Estimating Multilevel Models - Random Slope
+
+.pull-left[
 .seventy[
 Estimate a Random Intercept - Random Slope model
 
@@ -2014,7 +2171,7 @@ summary(rs_preds_model)
 ## Random effects:
 ##  Groups   Name        Variance Std.Dev. Corr 
 ##  cntry    (Intercept) 0.5439   0.7375        
-##           education   0.0114   0.1068   -0.61
+*##           education   0.0114   0.1068   -0.61
 ##  Residual             6.3830   2.5265        
 ## Number of obs: 39712, groups:  cntry, 29
 ## 
@@ -2027,6 +2184,17 @@ summary(rs_preds_model)
 ##           (Intr)
 ## education -0.643
 ```
+
+]
+]
+
+.pull-left[
+
+We now also have the random slope for `education` in our random effects report.
+
+The variance for the slope is `\(0.0114\)`.
+
+Remember: this is in units of the dependent variable. So this means the effect doesn't differ by much.
 
 ]
 
@@ -2085,41 +2253,7 @@ coef(rs_preds_model)
 
 .pull-right[
 
-
-```
-##    cntry intercept     slope
-## 1     SI 2.1402684 0.9467615
-## 2     SK 2.3737687 0.9315684
-## 3     HR 1.7263126 0.9212538
-## 4     ME 2.3155664 0.9153373
-## 5     PT 2.6502844 0.9147602
-## 6     FR 1.9582698 0.8997570
-## 7     CY 1.9307491 0.8650847
-## 8     CH 2.3067816 0.8618110
-## 9     LV 0.7560217 0.8484992
-## 10    HU 2.5102173 0.8427361
-## 11    RS 2.1455726 0.8367963
-## 12    PL 2.5944061 0.8320965
-## 13    BG 1.7380561 0.8223385
-## 14    FI 3.1043859 0.8028131
-## 15    IE 1.8443257 0.7753739
-## 16    LT 1.3243014 0.7752819
-## 17    DE 3.1902924 0.7675498
-## 18    NL 3.8393639 0.7616367
-## 19    IT 2.7435916 0.7472266
-## 20    DK 2.7100173 0.7367526
-## 21    GB 2.5873194 0.7332806
-## 22    SE 3.3164834 0.7276995
-## 23    AT 2.6127928 0.7229482
-## 24    CZ 2.9015942 0.7031620
-## 25    BE 3.2755878 0.6997987
-## 26    ES 3.1212971 0.6863033
-## 27    EE 3.0941904 0.6839451
-## 28    IS 3.6809917 0.6838421
-## 29    NO 3.2587224 0.5674478
-```
-
-&lt;img src="index_files/figure-html/unnamed-chunk-65-1.png" width="504" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-68-1.png" width="504" /&gt;
 
 
 ]
@@ -2178,7 +2312,7 @@ ranef(rs_preds_model)
 
 .pull-right[
 
-&lt;img src="index_files/figure-html/unnamed-chunk-67-1.png" width="504" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-70-1.png" width="504" /&gt;
 
 
 ]
@@ -2192,8 +2326,80 @@ class: white
 
 The higher the average income-level, the greater the impact of education on income.
 
-&lt;img src="index_files/figure-html/unnamed-chunk-68-1.png" width="792" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-71-1.png" width="792" /&gt;
 
+---
+
+### Model Comparisons
+
+When models are nested (i.e. they only differ by additional parameters), we can use a likelihood ratio test (implemented via `anova()`). 
+
+--
+
+Luckily, `anova()` automatically refits the model with ML (instead of REML), which is the recommended estimation for model comparison.
+
+
+```r
+anova(null_model, lvl1_preds_model, rs_preds_model)
+```
+
+```
+## Data: ess
+## Models:
+## null_model: income ~ (1 | cntry)
+## lvl1_preds_model: income ~ education + (1 | cntry)
+## rs_preds_model: income ~ education + (education | cntry)
+##                  npar    AIC    BIC logLik deviance    Chisq Df Pr(&gt;Chisq)    
+## null_model          3 192026 192052 -96010   192020                           
+## lvl1_preds_model    4 186529 186563 -93261   186521 5498.989  1  &lt; 2.2e-16 ***
+## rs_preds_model      6 186487 186538 -93237   186475   46.336  2  8.676e-11 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+```
+
+We see a significant better model fit for each addition of variables.
+
+---
+
+### Model Comparisons
+
+We can always use the AIC and BIC for model comparisons (again with ML estimation).
+
+
+```r
+anova(null_model, lvl1_preds_model, rs_preds_model)
+```
+
+```
+## Data: ess
+## Models:
+## null_model: income ~ (1 | cntry)
+## lvl1_preds_model: income ~ education + (1 | cntry)
+## rs_preds_model: income ~ education + (education | cntry)
+##                  npar    AIC    BIC logLik deviance    Chisq Df Pr(&gt;Chisq)    
+## null_model          3 192026 192052 -96010   192020                           
+## lvl1_preds_model    4 186529 186563 -93261   186521 5498.989  1  &lt; 2.2e-16 ***
+## rs_preds_model      6 186487 186538 -93237   186475   46.336  2  8.676e-11 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+```
+
+In this case, we want AIC and BIC values to be closer to zero.
+
+---
+
+class: white
+
+### Check Model Assumptions
+
+--
+
+
+```r
+performance::check_model(rs_preds_model)
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-74-1.png" width="936" /&gt;
 
 
 ---
@@ -2202,6 +2408,27 @@ The higher the average income-level, the greater the impact of education on inco
 
 https://glennwilliams.me/r4psych/mixed-effects-models.html#getting-started-6
 
+Centering or Not Centering in Multilevel Models? The Role of the Group Mean and the Assessment of Group Effects
+
+Group-mean-centering independent variables in multi-level models is dangerous
+
+Residuendiagnostik (jep das gibt’s auch noch)
+Genauso wie bei einer handelsüblichen linearen Regressionen auf der ersten Ebene gibt es einige Gütekriterien welche eine Multilevel-Regression einhalten muss.
+
+Nähere Informationen findet ihr dazu unter folgenden Links:
+
+HLMdiag: A Suite of Diagnostics for Hierarchical Linear Models in R
+
+DHARMa - Residual Diagnostics for HierArchical (Multi-level / Mixed) Regression Models
+
+6 Weitere Ressourcen
+Unter folgendem Link findet ihr ein tolles Tutorial für Multilevel-Modelle inklusive Anwendungen in R, STATA, SPSS und Mlwin:
+
+LEMMA (Learning Environment for Multilevel Methods and Applications)
+
+Guter Artikel für lineare sowie logistische Multilevelmodelle:
+
+Multi-level Models by Corey Sparks
 
 ---
 
@@ -2220,7 +2447,7 @@ class: white
 .seventy[You might be used to your data looking like this: An independent variable `\(x\)` and a dependent variable `\(y\)`.]
 
 
-&lt;img src="index_files/figure-html/unnamed-chunk-69-1.png" width="720" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-75-1.png" width="720" /&gt;
 
 
 
@@ -2236,7 +2463,7 @@ Plot about Orange Trees
 .seventy[However, if we introduce *groupings* of the data, a different picture emerges.]
 
 
-&lt;img src="index_files/figure-html/unnamed-chunk-70-1.png" width="720" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-76-1.png" width="720" /&gt;
 
 .seventy[In each of the groupings we find a ***negative** correlation between x and y*.]
 
@@ -2248,7 +2475,7 @@ Plot about Orange Trees
 Plot about Orange Trees
 ]
 
-&lt;img src="index_files/figure-html/unnamed-chunk-71-1.png" width="720" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-77-1.png" width="720" /&gt;
 ]
 
 ]
@@ -2264,7 +2491,7 @@ class: white
 
 .eightyfive[You might be used to your data looking like this: An independent variable `\(x\)` and a dependent variable `\(y\)`.]
 
-&lt;img src="index_files/figure-html/unnamed-chunk-72-1.png" width="720" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-78-1.png" width="720" /&gt;
 
 ]
 
@@ -2279,7 +2506,7 @@ class: white
 
 .eightyfive[However, if we introduce *groupings* of the data, a different picture emerges.]
 
-&lt;img src="index_files/figure-html/unnamed-chunk-73-1.png" width="720" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-79-1.png" width="720" /&gt;
 
 
 .eightyfive[In each of the groupings we find a ***negative** correlation between x and y*.]
@@ -2294,7 +2521,7 @@ class: white
 .pull-left[
 .eightyfive[You might be used to your data looking like this: An independent variable `\(x\)` and a dependent variable `\(y\)`.]
 
-&lt;img src="index_files/figure-html/unnamed-chunk-74-1.png" width="432" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-80-1.png" width="432" /&gt;
 ]
 
 --
@@ -2302,7 +2529,7 @@ class: white
 .pull-right[
 However, if we introduce *groupings* of the data, a different picture emerges.
 
-&lt;img src="index_files/figure-html/unnamed-chunk-75-1.png" width="432" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-81-1.png" width="432" /&gt;
 ]
 
 
@@ -2430,7 +2657,7 @@ ggplot(diamonds, aes(x = carat, y = price, color = clarity)) +
   theme_minimal() 
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-78-1.png" width="720" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-84-1.png" width="720" /&gt;
 
 
 ---
@@ -2485,6 +2712,7 @@ layout: true
 ```
 
 at the top.
+
 
 ---
 
