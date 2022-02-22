@@ -2984,7 +2984,7 @@ class: white
 
 With `plot_model()` you can also graph random effects
 
-```{r, fig.width=10, fig.height=4}
+```{r, fig.width=10, fig.height=5.5}
 sjPlot::plot_model(rs_preds_model, show.values = T, type = "re", value.offset = 0.5)
 ```
 
