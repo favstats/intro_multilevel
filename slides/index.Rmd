@@ -225,6 +225,9 @@ knitr::include_graphics("https://raw.githubusercontent.com/favstats/ds3_r_intro/
 
 + Your opportunity to ask questions!
 
+
+> Note: Mixed-effects models, hierarchical (linear) regression, variance component model, all refer to the same thing: multilevel modelling
+
 ---
 
 
@@ -1388,7 +1391,7 @@ class: white
 
 Instead we may introduce **random slopes** and let the slope vary by group.
 
-We can see that it some groups the relationship is *less positive*, *more positive* or even *negative* when allowing the slopes to vary.
+We can see that it some groups the relationship is *differs in strength* or even becomes *negative* when allowing the slopes to vary.
 
 
 ]
