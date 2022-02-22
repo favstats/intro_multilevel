@@ -4,7 +4,7 @@
     <title>A .fancy[fun] intro to Multilevel Models in R</title>
     <meta charset="utf-8" />
     <meta name="author" content="Fabio Votta" />
-    <meta name="date" content="2022-02-21" />
+    <meta name="date" content="2022-02-22" />
     <script src="libs/header-attrs-2.11/header-attrs.js"></script>
     <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
     <script src="libs/xaringanExtra-progressBar-0.0.1/progress-bar.js"></script>
@@ -20,7 +20,7 @@ class: bottom, left, title-slide
 # A .fancy[fun] intro to Multilevel Models in R
 ## ’<em>What’s so random about these slopes anyway?’</em>
 ### Fabio Votta
-### 2022-02-21
+### 2022-02-22
 
 ---
 
@@ -868,7 +868,7 @@ The dotted lines are fixed slopes. The arrows show the added error term for each
 
 class: white, middle, center
 
-### How to estimate Multilevel Models
+### Null Model
 
 
 Let's get to some coding!
@@ -881,24 +881,27 @@ For that, we will be using the `lme4` package in R.
 
 ---
 
-### How to estimate Multilevel Models
+### Modelling Strategy
+
+Approach to multilevel model building based on Hox (2010)
+
 
 1. Null Model (Random Intercept only)
 
-  a. Check ICC
-  
-2. Add independent variables
+2. Add independent Level 1 variables
 
-3. Add random slopes
+3. Add independent Level 2 variables
 
-4. (Cross-level) interactions
+4. Add random slopes
+
+5. (Cross-level) interactions
 
 
 Each step, check whether your model is significantly improved compared to the previous one.
 
 ---
 
-### How to estimate Multilevel Models
+### Some real data to play with
 
 For this section, we will use some **real data**:
 
@@ -912,7 +915,148 @@ The independent variable is `education` (Highest level of education).
 
 ---
 
-### How to estimate Multilevel Models
+class: white, middle, center
+
+### Estimating Multilevel Models - Null Model
+
+Varying intercept for each country
+
+---
+
+
+### Estimating Multilevel Models - Null Model
+
+
+
+
+
+```r
+library(lme4)
+
+
+null_model &lt;- `lmer`(income ~ (1|cntry), data = ess)
+```
+
+
+
+1. We use the function `lmer` from the `lme4` package.
+
+---
+
+
+### Null Model
+
+
+```r
+library(lme4)
+
+
+null_model &lt;- lmer(`income` ~ (1|cntry), data = ess)
+```
+
+
+
+1. We use the function `lmer` from the `lme4` package.
+
+2. We specify the dependent variable `income`. 
+
+---
+
+### Null Model
+
+
+```r
+library(lme4)
+
+
+null_model &lt;- lmer(income ~ `(1|cntry)`, data = ess)
+```
+
+
+
+1. We use the function `lmer` from the `lme4` package.
+
+2. We specify the dependent variable `income`. 
+
+3. We specify the *random* part of our equation within the brackets.
+
+---
+
+### Null Model
+
+
+```r
+library(lme4)
+
+
+null_model &lt;- lmer(income ~ (`1`|cntry), data = ess)
+```
+
+
+
+1. We use the function `lmer` from the `lme4` package.
+
+2. We specify the dependent variable `income`. 
+
+3. We specify the *random* part of our equation within the brackets.
+
+  + The first part in the brackets (`1`) refers to the random slope. `1` just says: hold the slope constant, i.e. no random slope.
+
+---
+
+&lt;!-- Next we specify our independent variables: in our case that is only one, `education`. --&gt;
+
+### Null Model
+
+
+```r
+library(lme4)
+
+
+null_model &lt;- lmer(income ~ (1|`cntry`), data = ess)
+```
+
+
+
+1. We use the function `lmer` from the `lme4` package.
+
+2. We specify the dependent variable `income`. 
+
+3. We specify the *random* part of our equation within the brackets.
+
+  + The first part in the brackets (`1`) refers to the random slope. `1` just says: hold the slope constant, i.e. no random slope.
+
+  + The second part in the brackets (`cntry`) specifies the random intercepts, i.e. by which group we want the data to vary. 
+
+---
+
+### Null Model
+
+
+```r
+library(lme4)
+
+
+null_model &lt;- lmer(income ~ (1|cntry), `data = ess`)
+```
+
+
+
+1. We use the function `lmer` from the `lme4` package.
+
+2. We specify the dependent variable `income`. 
+
+3. We specify the *random* part of our equation within the brackets.
+
+  + The first part in the brackets (`1`) refers to the random slope. `1` just says: hold the slope constant, i.e. no random slope.
+
+  + The second part in the brackets (`cntry`) specifies the random intercepts, i.e. by which group we want the data to vary. 
+
+4. We specify the dataset we use, here: `data = ess`.
+
+---
+
+### Null Model
 
 
 ```r
@@ -922,23 +1066,26 @@ library(lme4)
 null_model &lt;- lmer(income ~ (1|cntry), data = ess)
 ```
 
---
 
-We use the function `lmer`.
 
-First we specify the dependent variable `income`. 
+1. We use the function `lmer` from the `lme4` package.
 
-&lt;!-- Next we specify our independent variables: in our case that is only one, `education`. --&gt;
+2. We specify the dependent variable `income`. 
 
-Finally, we specify the *random* part of our equation within the brackets.
+3. We specify the *random* part of our equation within the brackets.
 
-+ The first part in the brackets (`1`) refers to the random slope. `1` just says: hold the slope constant, i.e. no random slope.
+  + The first part in the brackets (`1`) refers to the random slope. `1` just says: hold the slope constant, i.e. no random slope.
 
-+ The second part in the brackets (`cntry`) specifies the random intercepts, i.e. by which group we want the data to vary. 
+  + The second part in the brackets (`cntry`) specifies the random intercepts, i.e. by which group we want the data to vary. 
+
+4. We specify the dataset we use, here: `data = ess`.
+
+5. We assign the model to an object `null_model &lt;-`.
 
 ---
 
-### How to estimate Multilevel Models
+
+### Null Model - `summary()`
 
 .pull-left[.seventy[
 1. Estimate a Null Model
@@ -957,21 +1104,21 @@ summary(null_model)
 ## Formula: income ~ (1 | cntry)
 ##    Data: ess
 ## 
-## REML criterion at convergence: 192747.2
+## REML criterion at convergence: 192022.4
 ## 
 ## Scaled residuals: 
 ##      Min       1Q   Median       3Q      Max 
-## -2.04459 -0.83526 -0.04533  0.84496  2.24247 
+## -2.04751 -0.83510 -0.04548  0.84470  2.24208 
 ## 
 ## Random effects:
 ##  Groups   Name        Variance Std.Dev.
-##  cntry    (Intercept) 0.408    0.6387  
-##  Residual             7.345    2.7101  
-## Number of obs: 39865, groups:  cntry, 29
+##  cntry    (Intercept) 0.4094   0.6398  
+##  Residual             7.3472   2.7106  
+## Number of obs: 39712, groups:  cntry, 29
 ## 
 ## Fixed effects:
 ##             Estimate Std. Error t value
-## (Intercept)   5.2365     0.1195   43.83
+## (Intercept)   5.2377     0.1197   43.77
 ```
 
 ]
@@ -983,13 +1130,27 @@ summary(null_model)
 .pull-right[
 
 
+.eightyfive[
+
+
+There are three parts in this output
+
+1.) Some meta info about your model 
+
+  + generally not as important to consider
+
+2.) Group-Level statistics
+
+3.) Fixed Effects
+
+]
 
 ]
 
 
 ---
 
-### How to estimate Multilevel Models
+### Null Model - `summary()`
 
 .pull-left[.seventy[
 1. Estimate a Null Model
@@ -1004,78 +1165,25 @@ summary(null_model)
 .code70[
 
 ```r
-## Linear mixed model fit by REML ['lmerMod']
-## Formula: income ~ (1 | cntry)
-##    Data: ess
+*## Linear mixed model fit by REML ['lmerMod']
+*## Formula: income ~ (1 | cntry)
+*##    Data: ess
 ## 
-*## REML criterion at convergence: 192747.2
-## 
-## Scaled residuals: 
-##      Min       1Q   Median       3Q      Max 
-## -2.04459 -0.83526 -0.04533  0.84496  2.24247 
-## 
-## Random effects:
-##  Groups   Name        Variance Std.Dev.
-##  cntry    (Intercept) 0.408    0.6387  
-##  Residual             7.345    2.7101  
-## Number of obs: 39865, groups:  cntry, 29
-## 
-## Fixed effects:
-##             Estimate Std. Error t value
-## (Intercept)   5.2365     0.1195   43.83
-```
-
-]
-
-
-]
-
-
-.pull-right[
-
-
-
-]
-
-
----
-
----
-
-### How to estimate Multilevel Models
-
-.pull-left[.seventy[
-1. Estimate a Null Model
-
-
-```r
-summary(null_model)
-```
-
-]
-
-.code70[
-
-```r
-## Linear mixed model fit by REML ['lmerMod']
-## Formula: income ~ (1 | cntry)
-##    Data: ess
-## 
-## REML criterion at convergence: 192747.2 
+*## REML criterion at convergence: 192022.4
 ## 
 *## Scaled residuals:
 *##      Min       1Q   Median       3Q      Max
-*## -2.04459 -0.83526 -0.04533  0.84496  2.24247
+*## -2.04751 -0.83510 -0.04548  0.84470  2.24208
 ## 
 ## Random effects:
 ##  Groups   Name        Variance Std.Dev.
-##  cntry    (Intercept) 0.408    0.6387  
-##  Residual             7.345    2.7101  
-## Number of obs: 39865, groups:  cntry, 29
+##  cntry    (Intercept) 0.4094   0.6398  
+##  Residual             7.3472   2.7106  
+## Number of obs: 39712, groups:  cntry, 29
 ## 
 ## Fixed effects:
 ##             Estimate Std. Error t value
-## (Intercept)   5.2365     0.1195   43.83
+## (Intercept)   5.2377     0.1197   43.77
 ```
 
 ]
@@ -1087,6 +1195,220 @@ summary(null_model)
 .pull-right[
 
 
+.eightyfive[
+
+
+**1.) Meta Info**
+
+Formula and data used for estimation. 
+
+This also states whether we are using Maximum Likelihood (ML) or Restricted Maximum Likelihood (REML) estimation. In our case, it is the latter.
+
+It also states the REML value at convergence (if it converges), value is not particularly important.
+
+Finally, we can also see some distribution metrics for the residuals of the metrics (also typically less important).
+
+]
+
+]
+
+
+
+---
+
+### Null Model - `summary()`
+
+.pull-left[.seventy[
+1. Estimate a Null Model
+
+
+```r
+summary(null_model)
+```
+
+]
+
+.code70[
+
+```r
+## Linear mixed model fit by REML ['lmerMod']
+## Formula: income ~ (1 | cntry)
+##    Data: ess
+## 
+## REML criterion at convergence: 192022.4
+## 
+## Scaled residuals: 
+##      Min       1Q   Median       3Q      Max 
+## -2.04751 -0.83510 -0.04548  0.84470  2.24208 
+## 
+*## Random effects:
+*##  Groups   Name        Variance Std.Dev.
+*##  cntry    (Intercept) 0.4094   0.6398
+*##  Residual             7.3472   2.7106
+*## Number of obs: 39712, groups:  cntry, 29
+## 
+## Fixed effects:
+##             Estimate Std. Error t value
+## (Intercept)   5.2377     0.1197   43.77
+```
+
+]
+
+
+]
+
+
+.pull-right[
+
+
+.eightyfive[
+
+
+
+**2.) Group-Level statistics**
+
+
+This part states the random effects and its distribution.
+
+This is interpreted in the following way:
+
+]
+
+]
+
+
+---
+
+### Null Model - `summary()`
+
+.pull-left[.seventy[
+1. Estimate a Null Model
+
+
+```r
+summary(null_model)
+```
+
+]
+
+.code70[
+
+```r
+## Linear mixed model fit by REML ['lmerMod']
+## Formula: income ~ (1 | cntry)
+##    Data: ess
+## 
+## REML criterion at convergence: 192022.4
+## 
+## Scaled residuals: 
+##      Min       1Q   Median       3Q      Max 
+## -2.04751 -0.83510 -0.04548  0.84470  2.24208 
+## 
+*## Random effects:
+##  `Groups`   `Name`        `Variance` Std.Dev.     
+##  `cntry`    `(Intercept)` `0.4094`   0.6398       
+##  Residual             7.3472   2.7106       
+## Number of obs: 39712, groups:  cntry, 29    
+## 
+## Fixed effects:
+##             Estimate Std. Error t value
+## (Intercept)   5.2377     0.1197   43.77
+```
+
+]
+
+
+]
+
+
+.pull-right[
+
+.eightyfive[
+
+**2.) Group-Level statistics**
+
+This part states the random effects and its distribution.
+
+This is interpreted in the following way:
+
+1. Under `(Intercept)` we find the variance for the random intercept (per country: `cntry`). 
+
+  + The variance on the second level (country-level) is 0.40.
+
+]
+
+
+
+
+
+]
+
+
+---
+
+### Null Model - `summary()`
+
+.pull-left[.seventy[
+1. Estimate a Null Model
+
+
+```r
+summary(null_model)
+```
+
+]
+
+.code70[
+
+```r
+## Linear mixed model fit by REML ['lmerMod']
+## Formula: income ~ (1 | cntry)
+##    Data: ess
+## 
+## REML criterion at convergence: 192022.4
+## 
+## Scaled residuals: 
+##      Min       1Q   Median       3Q      Max 
+## -2.04751 -0.83510 -0.04548  0.84470  2.24208 
+## 
+*## Random effects:
+##  `Groups`   Name        `Variance` Std.Dev.     
+##  cntry    (Intercept) 0.4094   0.6398       
+##  `Residual`             `7.3472`   2.7106       
+## Number of obs: 39712, groups:  cntry, 29    
+## 
+## Fixed effects:
+##             Estimate Std. Error t value
+## (Intercept)   5.2377     0.1197   43.77
+```
+
+]
+
+
+]
+
+
+.pull-right[
+
+.eightyfive[
+
+**2.) Group-Level statistics**
+
+
+
+This part states the random effects and its distribution.
+
+This is interpreted in the following way:
+
+1. Under `(Intercept)` we find the variance for the random intercept (per country: `cntry`). 
+
+  + The variance on the second level (country-level) is 0.40.
+  
+2. Under `Residual` we find the variance on the level 1 (here: individuals).
+
+  + The variance on the first level is 7.35
+
+]
 
 ]
 
@@ -1094,24 +1416,326 @@ summary(null_model)
 ---
 
 
-### Calculate ICC
+### Null Model - `summary()`
 
-Determine how much variance is on Level 2 (to see whether a multilevel model is justfied).
+.pull-left[.seventy[
+1. Estimate a Null Model
 
-`$$ICC = \frac{Variance_{L2}}{Variance_{L2}+Variance_{L1}}$$`
 
 ```r
-library(performance)
-
-icc(null_model)
+summary(null_model)
 ```
 
-```
-## # Intraclass Correlation Coefficient
+]
+
+.code70[
+
+```r
+## Linear mixed model fit by REML ['lmerMod']
+## Formula: income ~ (1 | cntry)
+##    Data: ess
 ## 
-##      Adjusted ICC: 0.053
-##   Conditional ICC: 0.053
+## REML criterion at convergence: 192022.4
+## 
+## Scaled residuals: 
+##      Min       1Q   Median       3Q      Max 
+## -2.04751 -0.83510 -0.04548  0.84470  2.24208 
+## 
+*## Random effects:
+##  `Groups`   Name        `Variance` Std.Dev.     
+##  cntry    (Intercept) 0.4094   0.6398       
+##  `Residual`             `7.3472`   2.7106       
+## Number of obs: 39712, groups:  cntry, 29    
+## 
+## Fixed effects:
+##             Estimate Std. Error t value
+## (Intercept)   5.2377     0.1197   43.77
 ```
+
+]
+
+
+]
+
+
+.pull-right[
+
+.eightyfive[
+
+**2.) Group-Level statistics**
+
+This part states the random effects and its distribution.
+
+This is interpreted in the following way:
+
+1. Under `(Intercept)` we find the variance for the random intercept (per country: `cntry`), i.e. **between-group variance**. 
+
+  + The variance on the second level (country-level) is 0.40.
+  
+2. Under `Residual` we find the variance on level 1 (here: individuals), i.e. **within-group variance**. 
+
+  + The variance on the first level is 7.35
+
+]
+
+
+]
+
+
+---
+
+### Null Model - `summary()`
+
+.pull-left[.seventy[
+1. Estimate a Null Model
+
+
+```r
+summary(null_model)
+```
+
+]
+
+.code70[
+
+```r
+## Linear mixed model fit by REML ['lmerMod']
+## Formula: income ~ (1 | cntry)
+##    Data: ess
+## 
+## REML criterion at convergence: 192022.4
+## 
+## Scaled residuals: 
+##      Min       1Q   Median       3Q      Max 
+## -2.04751 -0.83510 -0.04548  0.84470  2.24208 
+## 
+*## Random effects:
+##  Groups   Name        `Variance` Std.Dev.     
+##  cntry    (Intercept) `0.4094`   0.6398       
+##  Residual             `7.3472`   2.7106       
+## Number of obs: 39712, groups:  cntry, 29    
+## 
+## Fixed effects:
+##             Estimate Std. Error t value
+## (Intercept)   5.2377     0.1197   43.77
+```
+
+]
+
+
+]
+
+
+.pull-right[
+
+.eightyfive[
+
+**2.) Group-Level statistics**
+
+
+`$$Variance_{Total} = 7.75$$`
+
+We can now calculate the Intra-Class Coefficient (ICC):
+
+`$$ICC = \frac{Variance_{L2}}{ Variance_{Total}}$$`
+
+`$$ICC = \frac{0.41_{L2}}{7.75} = 0.053$$`
+
+&gt; *5.2% of the variance of household income is between countries (on the second level).*
+
+.seventy[
+
+Typically, we say 10% of the variance should be on the second level to justify multilevel model but for countries 5% can also considered a lot.
+
+]
+
+
+]
+
+]
+
+
+---
+
+
+### Null Model - `summary()`
+
+.pull-left[.seventy[
+1. Estimate a Null Model
+
+
+```r
+summary(null_model)
+```
+
+]
+
+.code70[
+
+```r
+## Linear mixed model fit by REML ['lmerMod']
+## Formula: income ~ (1 | cntry)
+##    Data: ess
+## 
+## REML criterion at convergence: 192022.4
+## 
+## Scaled residuals: 
+##      Min       1Q   Median       3Q      Max 
+## -2.04751 -0.83510 -0.04548  0.84470  2.24208 
+## 
+*## Random effects:
+##  Groups   Name        Variance Std.Dev.     
+##  cntry    (Intercept) 0.4094   0.6398       
+##  Residual             7.3472   2.7106       
+*## Number of obs: 39712, groups:  cntry, 29
+## 
+## Fixed effects:
+##             Estimate Std. Error t value
+## (Intercept)   5.2377     0.1197   43.77
+```
+
+]
+
+
+]
+
+
+.pull-right[
+
+
+**2.) Group-Level statistics**
+
+
+This part shows the number of observations on Level 1 ($individuals_n = 39712$) and Level 2 ($countries_n = 29$).
+
+
+]
+
+
+---
+
+
+### Null Model - `summary()`
+
+.pull-left[.seventy[
+1. Estimate a Null Model
+
+
+```r
+summary(null_model)
+```
+
+]
+
+.code70[
+
+```r
+## Linear mixed model fit by REML ['lmerMod']
+## Formula: income ~ (1 | cntry)
+##    Data: ess
+## 
+## REML criterion at convergence: 192022.4
+## 
+## Scaled residuals: 
+##      Min       1Q   Median       3Q      Max 
+## -2.04751 -0.83510 -0.04548  0.84470  2.24208 
+## 
+## Random effects:                             
+##  Groups   Name        Variance Std.Dev.    
+##  cntry    (Intercept) 0.4094   0.6398       
+##  Residual             7.3472   2.7106      
+## Number of obs: 39712, groups:  cntry, 29    
+## 
+*## Fixed effects:
+*##             Estimate Std. Error t value
+*## (Intercept)   `5.2377`     0.1197   43.77
+```
+
+]
+
+
+]
+
+
+.pull-right[
+
+**3.) Fixed effects**
+
+This part tells us about the fixed effects. 
+
+The estimate for the intercept tells us that the grand mean of income (across all countries) is *5.24*.
+
+]
+
+
+---
+
+class: white
+
+### Null Model - Retrieve random intercepts
+
+.pull-left[
+
+
+```r
+coef(null_model)
+```
+
+```
+## $cntry
+##    (Intercept)
+## AT    4.955683
+## BE    5.703166
+## BG    4.263608
+## CH    5.469860
+## CY    4.618415
+## CZ    5.306594
+## DE    6.064316
+## DK    5.548790
+## EE    5.598878
+## ES    5.123275
+## FI    6.062619
+## FR    4.996828
+## GB    5.218492
+## HR    4.710382
+## HU    5.158844
+## IE    4.607740
+## IS    6.254706
+## IT    4.777290
+## LT    4.035245
+## LV    3.922685
+## ME    5.296826
+## NL    6.549926
+## NO    5.520132
+## PL    5.380241
+## PT    5.259325
+## RS    4.685073
+## SE    6.059498
+## SI    5.328434
+## SK    5.415541
+## 
+## attr(,"class")
+## [1] "coef.mer"
+```
+
+]
+
+
+.pull-right[
+
+&lt;img src="index_files/figure-html/unnamed-chunk-49-1.png" width="504" /&gt;
+
+
+]
+
+---
+
+class: white
+
+### Null Model - Retrieve random effects
+
+.pull-left[
+
 
 ```r
 ranef(null_model)
@@ -1120,49 +1744,463 @@ ranef(null_model)
 ```
 ## $cntry
 ##    (Intercept)
-## AT -0.27735419
-## BE  0.46086945
-## BG -0.97287049
-## CH  0.23502703
-## CY -0.61806163
-## CZ  0.07008438
-## DE  0.82867884
-## DK  0.31099903
-## EE  0.36097533
-## ES -0.11363524
-## FI  0.82479797
-## FR -0.24188036
-## GB -0.03005056
-## HR -0.52641570
-## HU -0.08307863
-## IE -0.62841924
-## IS  1.01811849
-## IT -0.45473338
-## LT -1.20506317
-## LV -1.31375102
-## ME  0.06398313
-## NL  1.30449511
-## NO  0.27322079
-## PL  0.14117766
-## PT  0.02708136
-## RS -0.54617224
-## SE  0.82274671
-## SI  0.09022048
-## SK  0.17901010
+## AT -0.28198657
+## BE  0.46549685
+## BG -0.97406142
+## CH  0.23219108
+## CY -0.61925436
+## CZ  0.06892486
+## DE  0.82664659
+## DK  0.31112107
+## EE  0.36120827
+## ES -0.11439448
+## FI  0.82494924
+## FR -0.24084109
+## GB -0.01917756
+## HR -0.52728733
+## HU -0.07882503
+## IE -0.62992969
+## IS  1.01703661
+## IT -0.46037906
+## LT -1.20242437
+## LV -1.31498445
+## ME  0.05915616
+## NL  1.31225624
+## NO  0.28246281
+## PL  0.14257119
+## PT  0.02165600
+## RS -0.55259655
+## SE  0.82182892
+## SI  0.09076483
+## SK  0.17787125
 ## 
 ## with conditional variances for "cntry"
 ```
 
+]
+
+
+.pull-right[
+
+&lt;img src="index_files/figure-html/unnamed-chunk-51-1.png" width="504" /&gt;
+
+
+]
+
+
+
+---
+
+class: white, middle, center
+
+### Estimating Multilevel Models - Level 1 Predictors
+
+Varying intercept for each country and adding a fixed slope for education
+
+---
+
+
+### Estimating Multilevel Models - Level 1 Predictors
+
+
+
+
 ```r
-sjPlot::get_model_data(null_model, type = "re") %&gt;% 
-  mutate(term = fct_reorder(term, estimate)) %&gt;% 
-  ggplot(aes(term, estimate)) +
-  geom_point() +
-  geom_linerange(aes(ymin = conf.low, ymax = conf.high)) +
-  coord_flip()
+lvl1_preds_model &lt;- lmer(income `~ education` + (1|cntry), data = ess)
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-30-1.png" width="504" /&gt;
+
+Next we specify our independent variables: in our case that is only one, `education`.
+
+.seventy[
+Estimate a Random Intercept - Fixed Slope model
+
+
+```r
+summary(lvl1_preds_model)
+```
+
+]
+
+.code70[
+
+```r
+## Linear mixed model fit by REML ['lmerMod']
+## Formula: income ~ education + (1 | cntry)
+##    Data: ess
+## 
+## REML criterion at convergence: 186531
+## 
+## Scaled residuals: 
+##      Min       1Q   Median       3Q      Max 
+## -2.69953 -0.78464 -0.03717  0.77389  2.93782 
+## 
+## Random effects:
+##  Groups   Name        Variance Std.Dev.
+##  cntry    (Intercept) 0.3358   0.5795  
+##  Residual             6.3976   2.5293  
+## Number of obs: 39712, groups:  cntry, 29
+## 
+## Fixed effects:
+##             Estimate Std. Error t value
+## (Intercept)  2.57024    0.11385   22.57
+## education    0.78209    0.01018   76.80
+## 
+## Correlation of Fixed Effects:
+##           (Intr)
+## education -0.305
+```
+
+]
+
+
+---
+
+class: white
+
+### Level 1 Predictors - Retrieve random intercepts
+
+.pull-left[
+
+
+```r
+coef(lvl1_preds_model)
+```
+
+```
+## $cntry
+##    (Intercept) education
+## AT    2.420451 0.7820857
+## BE    2.988959 0.7820857
+## BG    1.861890 0.7820857
+## CH    2.599999 0.7820857
+## CY    2.190022 0.7820857
+## CZ    2.630532 0.7820857
+## DE    3.135506 0.7820857
+## DK    2.534496 0.7820857
+## EE    2.733608 0.7820857
+## ES    2.840055 0.7820857
+## FI    3.180624 0.7820857
+## FR    2.356386 0.7820857
+## GB    2.411531 0.7820857
+## HR    2.178313 0.7820857
+## HU    2.701310 0.7820857
+## IE    1.820178 0.7820857
+## IS    3.308479 0.7820857
+## IT    2.648041 0.7820857
+## LT    1.300346 0.7820857
+## LV    1.005078 0.7820857
+## ME    2.751026 0.7820857
+## NL    3.765897 0.7820857
+## NO    2.399466 0.7820857
+## PL    2.762165 0.7820857
+## PT    3.030233 0.7820857
+## RS    2.311929 0.7820857
+## SE    3.110493 0.7820857
+## SI    2.696305 0.7820857
+## SK    2.863656 0.7820857
+## 
+## attr(,"class")
+## [1] "coef.mer"
+```
+
+]
+
+
+.pull-right[
+
+&lt;img src="index_files/figure-html/unnamed-chunk-57-1.png" width="504" /&gt;
+
+
+]
+
+---
+
+class: white
+
+### Level 1 Predictors - Retrieve random effects
+
+.pull-left[
+
+
+```r
+ranef(lvl1_preds_model)
+```
+
+```
+## $cntry
+##    (Intercept)
+## AT -0.14978930
+## BE  0.41871867
+## BG -0.70835013
+## CH  0.02975875
+## CY -0.38021817
+## CZ  0.06029190
+## DE  0.56526567
+## DK -0.03574461
+## EE  0.16336729
+## ES  0.26981398
+## FI  0.61038357
+## FR -0.21385477
+## GB -0.15870940
+## HR -0.39192805
+## HU  0.13106948
+## IE -0.75006271
+## IS  0.73823799
+## IT  0.07780037
+## LT -1.26989420
+## LV -1.56516249
+## ME  0.18078564
+## NL  1.19565647
+## NO -0.17077448
+## PL  0.19192451
+## PT  0.45999284
+## RS -0.25831126
+## SE  0.54025270
+## SI  0.12606468
+## SK  0.29341506
+## 
+## with conditional variances for "cntry"
+```
+
+]
+
+
+.pull-right[
+
+&lt;img src="index_files/figure-html/unnamed-chunk-59-1.png" width="504" /&gt;
+
+
+]
+
+---
+
+### Estimating Multilevel Models - Random Slope
+
+
+
+
+```r
+rs_preds_model &lt;- lmer(income ~ education + (`education`|cntry), data = ess)
+```
+
+
+Next we specify our random slope for `education`.
+
+
+.seventy[
+Estimate a Random Intercept - Random Slope model
+
+
+```r
+summary(rs_preds_model)
+```
+
+]
+
+.code70[
+
+```r
+## Linear mixed model fit by REML ['lmerMod']
+## Formula: income ~ education + (education | cntry)
+##    Data: ess
+## 
+## REML criterion at convergence: 186483.1
+## 
+## Scaled residuals: 
+##      Min       1Q   Median       3Q      Max 
+## -2.68977 -0.78464 -0.03798  0.78052  2.98718 
+## 
+## Random effects:
+##  Groups   Name        Variance Std.Dev. Corr 
+##  cntry    (Intercept) 0.5439   0.7375        
+##           education   0.0114   0.1068   -0.61
+##  Residual             6.3830   2.5265        
+## Number of obs: 39712, groups:  cntry, 29
+## 
+## Fixed effects:
+##             Estimate Std. Error t value
+## (Intercept)  2.54316    0.14257   17.84
+## education    0.79358    0.02265   35.04
+## 
+## Correlation of Fixed Effects:
+##           (Intr)
+## education -0.643
+```
+
+]
+
+---
+
+class: white
+
+### Retrieve random intercepts and slopes
+
+.pull-left[
+
+
+```r
+coef(rs_preds_model)
+```
+
+```
+## $cntry
+##    (Intercept) education
+## AT   2.6127928 0.7229482
+## BE   3.2755878 0.6997987
+## BG   1.7380561 0.8223385
+## CH   2.3067816 0.8618110
+## CY   1.9307491 0.8650847
+## CZ   2.9015942 0.7031620
+## DE   3.1902924 0.7675498
+## DK   2.7100173 0.7367526
+## EE   3.0941904 0.6839451
+## ES   3.1212971 0.6863033
+## FI   3.1043859 0.8028131
+## FR   1.9582698 0.8997570
+## GB   2.5873194 0.7332806
+## HR   1.7263126 0.9212538
+## HU   2.5102173 0.8427361
+## IE   1.8443257 0.7753739
+## IS   3.6809917 0.6838421
+## IT   2.7435916 0.7472266
+## LT   1.3243014 0.7752819
+## LV   0.7560217 0.8484992
+## ME   2.3155664 0.9153373
+## NL   3.8393639 0.7616367
+## NO   3.2587224 0.5674478
+## PL   2.5944061 0.8320965
+## PT   2.6502844 0.9147602
+## RS   2.1455726 0.8367963
+## SE   3.3164834 0.7276995
+## SI   2.1402684 0.9467615
+## SK   2.3737687 0.9315684
+## 
+## attr(,"class")
+## [1] "coef.mer"
+```
+
+]
+
+
+.pull-right[
+
+
+```
+##    cntry intercept     slope
+## 1     SI 2.1402684 0.9467615
+## 2     SK 2.3737687 0.9315684
+## 3     HR 1.7263126 0.9212538
+## 4     ME 2.3155664 0.9153373
+## 5     PT 2.6502844 0.9147602
+## 6     FR 1.9582698 0.8997570
+## 7     CY 1.9307491 0.8650847
+## 8     CH 2.3067816 0.8618110
+## 9     LV 0.7560217 0.8484992
+## 10    HU 2.5102173 0.8427361
+## 11    RS 2.1455726 0.8367963
+## 12    PL 2.5944061 0.8320965
+## 13    BG 1.7380561 0.8223385
+## 14    FI 3.1043859 0.8028131
+## 15    IE 1.8443257 0.7753739
+## 16    LT 1.3243014 0.7752819
+## 17    DE 3.1902924 0.7675498
+## 18    NL 3.8393639 0.7616367
+## 19    IT 2.7435916 0.7472266
+## 20    DK 2.7100173 0.7367526
+## 21    GB 2.5873194 0.7332806
+## 22    SE 3.3164834 0.7276995
+## 23    AT 2.6127928 0.7229482
+## 24    CZ 2.9015942 0.7031620
+## 25    BE 3.2755878 0.6997987
+## 26    ES 3.1212971 0.6863033
+## 27    EE 3.0941904 0.6839451
+## 28    IS 3.6809917 0.6838421
+## 29    NO 3.2587224 0.5674478
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-65-1.png" width="504" /&gt;
+
+
+]
+
+---
+
+class: white
+
+### Retrieve random effects
+
+.pull-left[
+
+
+```r
+ranef(rs_preds_model)
+```
+
+```
+## $cntry
+##    (Intercept)    education
+## AT  0.06963651 -0.070633287
+## BE  0.73243147 -0.093782770
+## BG -0.80510021  0.028756989
+## CH -0.23637470  0.068229501
+## CY -0.61240721  0.071503240
+## CZ  0.35843787 -0.090419496
+## DE  0.64713614 -0.026031651
+## DK  0.16686100 -0.056828899
+## EE  0.55103410 -0.109636363
+## ES  0.57814082 -0.107278130
+## FI  0.56122962  0.009231656
+## FR -0.58488648  0.106175558
+## GB  0.04416314 -0.060300841
+## HR -0.81684370  0.127672384
+## HU -0.03293894  0.049154645
+## IE -0.69883057 -0.018207614
+## IS  1.13783545 -0.109739320
+## IT  0.20043528 -0.046354912
+## LT -1.21885492 -0.018299536
+## LV -1.78713458  0.054917742
+## ME -0.22758984  0.121755882
+## NL  1.29620761 -0.031944737
+## NO  0.71556613 -0.226133653
+## PL  0.05124986  0.038515041
+## PT  0.10712815  0.121178741
+## RS -0.39758365  0.043214803
+## SE  0.77332711 -0.065881989
+## SI -0.40288790  0.153180072
+## SK -0.16938755  0.137986944
+## 
+## with conditional variances for "cntry"
+```
+
+]
+
+
+.pull-right[
+
+&lt;img src="index_files/figure-html/unnamed-chunk-67-1.png" width="504" /&gt;
+
+
+]
+
+
+---
+
+class: white
+
+### Correlation between random intercepts and slopes
+
+The higher the average income-level, the greater the impact of education on income.
+
+&lt;img src="index_files/figure-html/unnamed-chunk-68-1.png" width="792" /&gt;
+
+
+
+---
+
+## Learn more about multilevels
+
+https://glennwilliams.me/r4psych/mixed-effects-models.html#getting-started-6
 
 
 ---
@@ -1182,7 +2220,7 @@ class: white
 .seventy[You might be used to your data looking like this: An independent variable `\(x\)` and a dependent variable `\(y\)`.]
 
 
-&lt;img src="index_files/figure-html/unnamed-chunk-31-1.png" width="720" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-69-1.png" width="720" /&gt;
 
 
 
@@ -1198,7 +2236,7 @@ Plot about Orange Trees
 .seventy[However, if we introduce *groupings* of the data, a different picture emerges.]
 
 
-&lt;img src="index_files/figure-html/unnamed-chunk-32-1.png" width="720" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-70-1.png" width="720" /&gt;
 
 .seventy[In each of the groupings we find a ***negative** correlation between x and y*.]
 
@@ -1210,7 +2248,7 @@ Plot about Orange Trees
 Plot about Orange Trees
 ]
 
-&lt;img src="index_files/figure-html/unnamed-chunk-33-1.png" width="720" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-71-1.png" width="720" /&gt;
 ]
 
 ]
@@ -1226,7 +2264,7 @@ class: white
 
 .eightyfive[You might be used to your data looking like this: An independent variable `\(x\)` and a dependent variable `\(y\)`.]
 
-&lt;img src="index_files/figure-html/unnamed-chunk-34-1.png" width="720" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-72-1.png" width="720" /&gt;
 
 ]
 
@@ -1241,7 +2279,7 @@ class: white
 
 .eightyfive[However, if we introduce *groupings* of the data, a different picture emerges.]
 
-&lt;img src="index_files/figure-html/unnamed-chunk-35-1.png" width="720" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-73-1.png" width="720" /&gt;
 
 
 .eightyfive[In each of the groupings we find a ***negative** correlation between x and y*.]
@@ -1256,7 +2294,7 @@ class: white
 .pull-left[
 .eightyfive[You might be used to your data looking like this: An independent variable `\(x\)` and a dependent variable `\(y\)`.]
 
-&lt;img src="index_files/figure-html/unnamed-chunk-36-1.png" width="432" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-74-1.png" width="432" /&gt;
 ]
 
 --
@@ -1264,7 +2302,7 @@ class: white
 .pull-right[
 However, if we introduce *groupings* of the data, a different picture emerges.
 
-&lt;img src="index_files/figure-html/unnamed-chunk-37-1.png" width="432" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-75-1.png" width="432" /&gt;
 ]
 
 
@@ -1392,7 +2430,7 @@ ggplot(diamonds, aes(x = carat, y = price, color = clarity)) +
   theme_minimal() 
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-40-1.png" width="720" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-78-1.png" width="720" /&gt;
 
 
 ---
@@ -1489,6 +2527,7 @@ at the top.
 <script>var slideshow = remark.create({
 "highlightStyle": "github",
 "highlightLines": true,
+"highlightSpans": true,
 "countIncrementalSlides": false,
 "slideNumberFormat": "%current%",
 "ratio": "16:9"
