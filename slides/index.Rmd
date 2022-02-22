@@ -78,34 +78,10 @@ knitr::opts_chunk$set(fig.retina = 3,
                       message = FALSE,
                       echo = TRUE)
 
-pacman::p_load(tidyverse, bayestestR, lme4, bmisc)
+pacman::p_load(tidyverse, bayestestR, lme4, bmisc, texreg)
 
 set.seed(101)  # for reproducibility
-example_data <- palmerpenguins::penguins %>% 
-  select(Group = species, x = bill_length_mm, y = flipper_length_mm)  %>% 
-  mutate(x = (80 - x) / 5,
-         y = (300 - y) / 15) %>%
-  bind_rows(palmerpenguins::penguins %>% 
-              mutate(Group = paste0(species, "B")) %>% 
-  select(Group, x = bill_length_mm, y = flipper_length_mm)  %>% 
-  mutate(x = (85 - x) / 5,
-         y = (305 - y) / 15)) %>% 
-  group_by(Group) %>% 
-  mutate(y_rev = rev(y)) %>% 
-  ungroup(Group) %>% 
-  # arrange(desc(y)) %>% 
-  mutate(y = ifelse(Group == "Gentoo", y + 2, y)) %>% 
-  mutate(y = ifelse(Group == "GentooB", y - 2.5, y)) %>% 
-  mutate(y = ifelse(Group == "AdelieB", y + 2, y)) %>% 
-  mutate(y = ifelse(Group == "Adelie", y - 1, y)) %>% 
-  mutate(y = ifelse(Group == "Chinstrap", y + 2, y)) %>%
-  mutate(y = ifelse(Group == "ChinstrapB", y - 2, y)) %>%
-  group_by(Group) %>% 
-  mutate(y = ifelse(Group %in% c("ChinstrapB", "AdelieB", "Gentoo"), rev(y), y)) %>% 
-  ungroup(Group) %>% 
-  mutate(x = ifelse(Group %in% c("GentooB"), x-2, x)) %>% 
-  mutate(x = ifelse(Group %in% c("Gentoo"), x+2, x))
-
+example_data <- readRDS("data/example_data.rds")
 
 # example_data <- sim_ris(m = 5, n = 50, mu = c(1, 5), sigma = c(5, 4, 10)) %>% 
 #   mutate(Group = as.character(subject))
@@ -115,36 +91,7 @@ example_data2 <- simulate_simpson(n = 100, groups = 10, r = -0.5) %>%
   rename(x = V1, y = V2)
 
 
-ess <- readRDS("data/ess_inc.rds") %>% 
-  drop_na(income, cntry, education)
-
-cntry_dat <- haven::read_spss("data/ESSMD-2020-cntry_F1.sav")
-
-ess <- ess %>% 
-  left_join(cntry_dat %>% 
-  select(cntry, gini_coef = c_gini_2018))
-
-
-# cntry_dat %>% 
-#   select(cntry, gini_coef = c_gini_2018)
-# 
-# 
-# 
-# left_joined <- ess %>% 
-#   select(cntry, income) %>% 
-#   left_join(cntry_dat %>% 
-#   select(where(~!any(is.na(.)))))
-# 
-# 
-# left_joined %>% 
-#   select(-cntry) %>% 
-#   drop_na(income) %>% 
-#   # contains("2020")
-#   # select(income, c_areaa_2013) %>% 
-#   cor(use = "pairwise.complete.obs") %>% 
-#   as.data.frame() %>% 
-#   rownames_to_column("var") %>% 
-#   arrange(desc(income))
+ess <- readRDS("data/ess_example")
 ```
 
 ```{r xaringanExtra, echo = FALSE}
@@ -231,7 +178,7 @@ geom_slope_triangle <- function(fort, lower_boundary = 0.3, upper_boundary = 0.6
 
 class: white
 
-#### Everyone struggles at first but it gets better!
+#### It might be hard at first but it gets better!
 
 ```{r, echo = F, out.width="90%", fig.align = 'center'}
 knitr::include_graphics("https://raw.githubusercontent.com/favstats/ds3_r_intro/main/images/r_first_then_new.png")
@@ -256,11 +203,27 @@ knitr::include_graphics("https://raw.githubusercontent.com/favstats/ds3_r_intro/
 
 ### Overview
 
-+ **Why** *Multilevel Models*?
-+ **What** are *Multilevel Models*?
-+ **How** estimate *Multilevel Models*?
-+ **How** interpret *Multilevel Models*?
-+ **How** diagnose *Multilevel Models*?
++ *Multilevel* data structures
+
+--
+
++ Why *multilevel models*?
+
+--
+
++ What are *multilevel models*?
+
+--
+
++ Estimate *multilevel models* in R
+
+--
+
++ Some neat R functions to deal with *multilevel models*
+
+--
+
++ Your opportunity to ask questions!
 
 ---
 
@@ -1577,7 +1540,9 @@ The European Social Survey Round 9 (2018)
 
 The dependent variable is `income` (Household's total net income, all sources).
 
-The independent variable is `education` (Highest level of education).
+The independent level 1 variable is `education` (Highest level of education).
+
+The independent level 2 variable is `net_migration` (net migration 2018)
 
 ---
 
@@ -1871,6 +1836,67 @@ There are three parts in this output
 **1.) Some meta info about your model**
 
 **2.) Group-Level statistics (random effects)**
+
+]
+
+]
+
+
+---
+
+### Null Model - `summary()`
+
+.pull-left[.seventy[
+Estimate a Null Model
+
+```{r, eval = F}
+summary(null_model)
+```
+
+]
+
+.code70[
+```{r, eval = F, size="small"}
+## Linear mixed model fit by REML ['lmerMod']
+## Formula: income ~ (1 | cntry)
+##    Data: ess
+## 
+## REML criterion at convergence: 192022.4
+## 
+## Scaled residuals: 
+##      Min       1Q   Median       3Q      Max 
+## -2.04751 -0.83510 -0.04548  0.84470  2.24208 
+## 
+## Random effects:                             #<<
+##  Groups   Name        Variance Std.Dev.     #<<
+##  cntry    (Intercept) 0.4094   0.6398       #<<
+##  Residual             7.3472   2.7106       #<<
+## Number of obs: 39712, groups:  cntry, 29    #<<
+## 
+## Fixed effects:
+##             Estimate Std. Error t value
+## (Intercept)   5.2377     0.1197   43.77
+```
+
+]
+
+
+]
+
+
+.pull-right[
+
+
+.eightyfive[
+
+
+There are three parts in this output
+
+**1.) Some meta info about your model**
+
+**2.) Group-Level statistics (random effects)**
+
+**3.) Fixed effects**
 
 ]
 
@@ -2469,57 +2495,22 @@ Next we specify our independent variables: in our case that is only one, `educat
 
 ### Estimating Multilevel Models - Level 1 Predictors
 
+With the `texreg` package we can get a nice regression table output.
+
+.font60[
 .pull-left[
-
-
-.seventy[
-Estimate a Random Intercept - Fixed Slope model
-
-```{r, eval = F}
-summary(lvl1_preds_model)
+```{r, results='asis'}
+htmlreg(list(null_model, lvl1_preds_model))
 ```
-
+]
 ]
 
-
-.code70[
-```{r, eval = F, size="small"}
-## Linear mixed model fit by REML ['lmerMod']
-## Formula: income ~ education + (1 | cntry)
-##    Data: ess
-## 
-## REML criterion at convergence: 186531
-## 
-## Scaled residuals: 
-##      Min       1Q   Median       3Q      Max 
-## -2.69953 -0.78464 -0.03717  0.77389  2.93782 
-## 
-## Random effects:
-##  Groups   Name        Variance Std.Dev.
-##  cntry    (Intercept) 0.3358   0.5795    
-##  Residual             6.3976   2.5293    
-## Number of obs: 39712, groups:  cntry, 29
-## 
-## Fixed effects:
-##             Estimate Std. Error t value
-## (Intercept)  2.57024    0.11385   22.57
-## education    0.78209    0.01018   76.80  #<<
-## 
-## Correlation of Fixed Effects:
-##           (Intr)
-## education -0.305
-```
-
-]
-
-
-]
 
 .pull-right[
 
 We now get a fixed effect for `education`. We can interpret this just like in a typical linear regression:
 
-> *With every level of education household income increases by 0.78 income levels.*
+> *With every level of education, household income increases by 0.78 income levels.*
 
 ]
 
@@ -2584,29 +2575,6 @@ broom.mixed::augment(lvl1_preds_model) %>%
 
 ]
 
-
----
-
-## Level 2 Predictors
-
-```{r, echo = F, results='asis', eval=T}
-
-lvl2_preds_model <- lmer(income ~ education * gini_coef + (1|cntry), data = ess)
-
-```
-
-```{r, echo = T, results='asis', eval=F}
-lvl2_preds_model <- lmer(income ~ education `+ cpi +` (1|cntry), data = ess)
-```
-
-```{r}
-summary(lvl2_preds_model)
-
-texreg::screenreg(lvl2_preds_model)
-
-sjPlot::plot_model(lvl2_preds_model, type = "int")
-```
-
 ---
 
 class: white
@@ -2648,17 +2616,55 @@ sjPlot::get_model_data(lvl1_preds_model, type = "re") %>%
 
 ---
 
+
+## Level 2 Predictors
+
+```{r, echo = F, results='asis', eval=T}
+
+lvl2_preds_model <- lmer(income ~ education + net_migration + (1|cntry), data = ess)
+
+```
+
+```{r, echo = T, results='asis', eval=F}
+lvl2_preds_model <- lmer(income ~ education `+ net_migration +` (1|cntry), data = ess)
+```
+
+We add a level 2 predictor: `net_migration`.
+---
+
+### Estimating Multilevel Models - Level 2 Predictors
+
+
+.font60[
+.pull-left[
+```{r, results='asis'}
+htmlreg(list(null_model, lvl1_preds_model, lvl2_preds_model))
+```
+]
+]
+
+
+.pull-right[
+
+We now get a fixed effect for `net_migration`. We can interpret this just like in a typical linear regression:
+
+> *With every unit increase of net migration, household income increases by 0.056 income levels.*
+
+]
+
+---
+
 ### Estimating Multilevel Models - Random Slope
 
 
 ```{r, echo = F, results='asis', eval=T}
 
-rs_preds_model <- lmer(income ~ education + (education|cntry), data = ess)
+rs_preds_model <- lmer(income ~ education + net_migration + (education|cntry), data = ess)
 
 ```
 
 ```{r, echo = T, results='asis', eval=F}
-rs_preds_model <- lmer(income ~ education + (`education`|cntry), data = ess)
+rs_preds_model <- lmer(income ~ education + net_migration + (`education`|cntry), data = ess)
 ```
 
 
@@ -2666,55 +2672,24 @@ Next we specify our random slope for `education`.
 
 ---
 
+
 ### Estimating Multilevel Models - Random Slope
 
+
+.font50[
 .pull-left[
-.seventy[
-Estimate a Random Intercept - Random Slope model
-
-```{r, eval = F}
-summary(rs_preds_model)
+```{r, results='asis'}
+htmlreg(list(null_model, lvl1_preds_model, lvl2_preds_model, rs_preds_model))
 ```
-
-]
-
-.code70[
-```{r, eval = F, size="small"}
-## Linear mixed model fit by REML ['lmerMod']
-## Formula: income ~ education + (education | cntry)
-##    Data: ess
-## 
-## REML criterion at convergence: 186483.1
-## 
-## Scaled residuals: 
-##      Min       1Q   Median       3Q      Max 
-## -2.68977 -0.78464 -0.03798  0.78052  2.98718 
-## 
-## Random effects:
-##  Groups   Name        Variance Std.Dev. Corr 
-##  cntry    (Intercept) 0.5439   0.7375        
-##           education   0.0114   0.1068   -0.61  #<<
-##  Residual             6.3830   2.5265        
-## Number of obs: 39712, groups:  cntry, 29
-## 
-## Fixed effects:
-##             Estimate Std. Error t value
-## (Intercept)  2.54316    0.14257   17.84
-## education    0.79358    0.02265   35.04
-## 
-## Correlation of Fixed Effects:
-##           (Intr)
-## education -0.643
-```
-
 ]
 ]
 
-.pull-left[
+
+.pull-right[
 
 We now also have the random slope for `education` in our random effects report.
 
-The variance for the slope is $0.0114$.
+> The variance for the slope is $0.01$.
 
 Remember: this is in units of the dependent variable. So this means the effect doesn't differ by much.
 
@@ -2739,10 +2714,11 @@ coef(rs_preds_model)
 
 ```{r, echo = F}
 
+rs_preds_model2 <- lmer(income ~ education + (education|cntry), data = ess)
 
-sum_rs <- summary(rs_preds_model)
+sum_rs <- summary(rs_preds_model2)
 
-rs_preds <- broom.mixed::tidy(rs_preds_model) %>% 
+rs_preds <- broom.mixed::tidy(rs_preds_model2) %>% 
   filter(effect == "fixed")
 
 rs_coefs <- coef(rs_preds_model)$cntry %>% 
@@ -2754,7 +2730,7 @@ rs_coefs <- coef(rs_preds_model)$cntry %>%
 #   arrange(desc(slope)) #%>%
 #   filter(cntry %in% c("SI", "NL", "NO"))
 
-broom.mixed::augment(rs_preds_model) %>% 
+broom.mixed::augment(rs_preds_model2) %>% 
   left_join(rs_coefs)  %>% 
   filter(cntry %in% c("SI", "NL", "NO", "DK", "LT")) %>% 
   # group_by(cntry) %>%
@@ -2856,397 +2832,259 @@ coef(rs_preds_model)$cntry %>%
 
 ### Model Comparisons
 
+.eightyfive[
 When models are nested (i.e. they only differ by additional parameters), we can use a likelihood ratio test (implemented via `anova()`). 
+]
+
+
 
 --
 
+.eightyfive[
 Luckily, `anova()` automatically refits the model with ML (instead of REML), which is the recommended estimation for model comparison.
 
 ```{r}
-anova(null_model, lvl1_preds_model, rs_preds_model)
+anova(null_model, lvl1_preds_model, lvl2_preds_model, rs_preds_model)
 ```
 
 We see a significant better model fit for each addition of variables.
+]
 
 ---
 
 ### Model Comparisons
 
+.eightyfive[
 We can always use the AIC and BIC for model comparisons (again with ML estimation).
 
 ```{r}
-anova(null_model, lvl1_preds_model, rs_preds_model)
+anova(null_model, lvl1_preds_model, lvl2_preds_model, rs_preds_model)
 ```
 
-In this case, we want AIC and BIC values to be closer to zero.
+In this case, AIC and BIC values closer to zero indicate better fit.
+
+]
+
+---
+
+class: white, middle, center
+
+### Cool R packages/functions 
+
+![](https://i.kym-cdn.com/photos/images/newsfeed/000/538/716/7f5.gif)
+### that help with multilevel modelling
 
 ---
 
 class: white
 
-### Check Model Assumptions
+### Check Model Assumptions with `performance` package
 
 --
 
-```{r, fig.width=13, fig.height=6.25}
+```{r, eval=FALSE}
 performance::check_model(rs_preds_model)
 ```
 
 
----
-
-## Learn more about multilevels
-
-https://glennwilliams.me/r4psych/mixed-effects-models.html#getting-started-6
-
-Centering or Not Centering in Multilevel Models? The Role of the Group Mean and the Assessment of Group Effects
-
-Group-mean-centering independent variables in multi-level models is dangerous
-
-Residuendiagnostik (jep das gibt’s auch noch)
-Genauso wie bei einer handelsüblichen linearen Regressionen auf der ersten Ebene gibt es einige Gütekriterien welche eine Multilevel-Regression einhalten muss.
-
-Nähere Informationen findet ihr dazu unter folgenden Links:
-
-HLMdiag: A Suite of Diagnostics for Hierarchical Linear Models in R
-
-DHARMa - Residual Diagnostics for HierArchical (Multi-level / Mixed) Regression Models
-
-6 Weitere Ressourcen
-Unter folgendem Link findet ihr ein tolles Tutorial für Multilevel-Modelle inklusive Anwendungen in R, STATA, SPSS und Mlwin:
-
-LEMMA (Learning Environment for Multilevel Methods and Applications)
-
-Guter Artikel für lineare sowie logistische Multilevelmodelle:
-
-Multi-level Models by Corey Sparks
-
----
-
-### Visualize Random Intercept
-
----
-
-class: white
-
-### Data Structures
-
-
-.panelset.sideways.right[
-.panel[.panel-name[<br><br><br><br><br><br>From this data we may conclude that *x is **positively** correlated with y*.]
-
-.seventy[You might be used to your data looking like this: An independent variable $x$ and a dependent variable $y$.]
-
-
-```{r, echo=F, fig.width=10, fig.height=5.5}
-example_data %>% 
-  ggplot(aes(x, y)) +
-  geom_point() +
-  geom_smooth(method = "lm", se = F) +
-  ggpubr::stat_cor(label.x = 8.5, label.y.npc = "bottom") +
-  theme_minimal()
+```{r, fig.width=13, fig.height=6.25, echo = F}
+performance::check_model(rs_preds_model2)
 ```
 
 
 
-]]
 
----
-
-.panel[
-.panel-name[
-Plot about Orange Trees
-]
-
-.seventy[However, if we introduce *groupings* of the data, a different picture emerges.]
-
-
-```{r, echo=F, fig.width=10, fig.height=5.5}
-example_data %>% 
-  mutate(y = abs(y)) %>% 
-  ggplot(aes(x, y, color = Group)) +
-  geom_point() +
-  geom_smooth(method = "lm", se = F) +
-  ggpubr::stat_cor(label.x = 8.5, label.y.npc = "bottom") +
-  theme_minimal() +
-  ggthemes::scale_color_gdocs() #+
-  # theme(legend.position = "none")
-```
-
-.seventy[In each of the groupings we find a ***negative** correlation between x and y*.]
-
-
-]
-
-.panel[
-.panel-name[
-Plot about Orange Trees
-]
-
-```{r, echo=F, fig.width=10, fig.height=5.5}
-example_data %>% 
-  ggplot(aes(x, y)) +
-  geom_point() +
-  geom_smooth(method = "lm", se = F) +
-  ggpubr::stat_cor(label.x = 8.5, label.y.npc = "bottom") +
-  theme_minimal()
-```
-]
-
-]
-
----
-
-class: white
-
-### Data Structures
-
-.pull-left[
-
-
-.eightyfive[You might be used to your data looking like this: An independent variable $x$ and a dependent variable $y$.]
-
-```{r, echo=F, fig.width=10, fig.height=5.5}
-example_data %>% 
-  ggplot(aes(x, y)) +
-  geom_point() +
-  geom_smooth(method = "lm", se = F) +
-  ggpubr::stat_cor(label.x = 8.5, label.y.npc = "bottom") +
-  theme_minimal()
-```
-
-]
-
-.eightyfive[From this data we may conclude that *x is **positively** correlated with y*.]
-
----
-
-class: white
-
-### Data Structures
-
-
-.eightyfive[However, if we introduce *groupings* of the data, a different picture emerges.]
-
-```{r, echo=F, fig.width=10, fig.height=5.5}
-
-
-example_data %>% 
-  ggplot(aes(x, y, color = Group)) +
-  geom_point() +
-  geom_smooth(method = "lm", se = F) +
-  ggpubr::stat_cor(label.x = 8.5, label.y.npc = "bottom") +
-  theme_minimal() +
-  ggthemes::scale_color_gdocs() +
-  theme(legend.position = "none")
-```
-
-
-.eightyfive[In each of the groupings we find a ***negative** correlation between x and y*.]
 
 
 ---
 
 class: white
 
-### Data Structures
+### Extract model statistics with `broom.mixed`
 
-.pull-left[
-.eightyfive[You might be used to your data looking like this: An independent variable $x$ and a dependent variable $y$.]
-
-```{r, echo=F, fig.width=6, fig.height=6}
-example_data %>% 
-  ggplot(aes(x, y)) +
-  geom_point() +
-  geom_smooth(method = "lm") +
-  ggpubr::stat_cor() +
-  theme_minimal()
-```
-]
+The function `tidy()` gives us all model parameters (random and fixed).
 
 --
 
-.pull-right[
-However, if we introduce *groupings* of the data, a different picture emerges.
-
-```{r, echo=F, fig.width=6, fig.height=6}
-
-
-example_data %>% 
-  ggplot(aes(x, y, color = Group)) +
-  geom_point() +
-  geom_smooth(method = "lm") +
-  ggpubr::stat_cor()  +
-  theme_minimal() +
-  ggthemes::scale_color_gdocs() +
-  theme(legend.position = "none")
+```{r, fig.width=13, fig.height=6.25}
+broom.mixed::tidy(rs_preds_model)
 ```
-]
-
-
-
----
-
-# Heading 1
-
-You can use several heading levels
-
-### Heading 2
-
-This is text under a second level heading. And some **bold** and  _italics_ text.
-
-#### Heading 3
-
-It's also easy to add $\LaTeX$ code
-$$x^n + y^n = z^n $$
-
-Three dashes make a new slide
-
----
-
-
-# Heading 1
-
-- something  
-- something more
-
-1. numbered lists
-1. number two list
-
----
-
-### Add some R code
-
-```{r, fig.height=5}
-summary(mtcars)
-```
-
----
-
-### Add cool gifs to your slides!
-
-
-![](https://s4.gifyu.com/images/ezgif-4-d64ba87b438c.gif)
-
----
-
-### Create two columns
-
-.pull-left[
-
-This text goes in the left column.
-
-![](https://s4.gifyu.com/images/ezgif-4-d64ba87b438c.gif)
-
-]
-
-.pull-right[
-
-This text goes in the right column.
-
-![](https://s4.gifyu.com/images/ezgif-4-d64ba87b438c.gif)
-
-
-]
-
-
-
----
-
-class: middle, center
-
-# You can also create *special* slides
-
-
-For example:
-
-`class: white`
-
-gives you a white background rather than a babyblue one. 
-
-This comes in handy for graphs (with white backgrounds).
 
 ---
 
 class: white
 
-#### add `class: white`
+### Extract model statistics with `broom.mixed`
 
+The function `augment()` gives us fitted values (incl. random intercepts and slopes) for every single data point.
+
+
+--
+
+```{r, fig.width=13, fig.height=6.25}
+broom.mixed::augment(rs_preds_model)
+```
+
+
+---
+
+### Plot random intercepts and slopes with `broom.mixed`
+
+.pull-left[
+
+Output from `augment` allows us to plot random slopes and intercepts.
+
+```{r,eval= F}
+
+broom.mixed::augment(rs_preds_model) %>% 
+  filter(cntry %in% cntries) %>%
+  ggplot(aes(x=education, y=income)) +
+  geom_line(aes(x = education, 
+                y=.fitted, 
+                color = cntry), 
+            inherit.aes=FALSE, size = 1) +
+  theme_minimal() +
+  theme(legend.position="none") +
+  ggthemes::scale_color_gdocs()
+```
+]
+
+.pull-right[
 ```{r, echo = F}
-if(!require(ggplot2)){
-    install.packages("ggplot2")
-    library(ggplot2)
-}
+broom.mixed::augment(rs_preds_model) %>% 
+  filter(cntry %in% c("SI", "NL", "NO", "DK", "LT")) %>% 
+  ggplot(aes(x=education, y=income)) +
+  geom_line(aes(x = education,  y=.fitted, color = cntry), 
+            inherit.aes=FALSE, size = 1) +
+  theme_minimal() +
+  theme(legend.position="none") +
+  ggthemes::scale_color_gdocs()
+```
+]
+
+---
+
+class: white
+
+## Plot fixed effects with `sjPlot`
+
+This is a great function that plots coefficients: `plot_model()`
+
+```{r, fig.width=10, fig.height=4}
+sjPlot::plot_model(rs_preds_model, show.p = T, show.values = T)
+```
+
+Also works on various other models (OLS, logistic regression).
+
+---
+
+class: white
+
+## Plot random effects with `sjPlot`
+
+With `plot_model()` you can also graph random effects
+
+```{r, fig.width=10, fig.height=4}
+sjPlot::plot_model(rs_preds_model, show.values = T, type = "re", value.offset = 0.5)
 ```
 
 
 
-```{r, fig.width=10, fig.height=5.5}
-ggplot(diamonds, aes(x = carat, y = price, color = clarity)) +
-  geom_point() +
-  theme_minimal() 
+---
 
-```
+## Things we didn't learn about today
+
+**Cross-Level Interactions**
+
+How to do multilevel analyses with cross-level interaction by Utrecht University
+
++ [https://multilevel-analysis.sites.uu.nl/tutorials/](https://multilevel-analysis.sites.uu.nl/tutorials/)
 
 
 ---
 
-class: black, middle
+## Things we didn't learn about today
 
-# a black slide with middle centering
+**Centering of Variables in Multilevel models**
 
-using `class: black`
+Centering or Not Centering in Multilevel Models? The Role of the Group Mean and the Assessment of Group Effects (Paccagnella 2006)
+
++ [https://www.ncbi.nlm.nih.gov/pubmed/16394187](https://www.ncbi.nlm.nih.gov/pubmed/16394187)
+
+Group-mean-centering independent variables in multi-level models is dangerous (Kelley et al. 2016)
+
++ [https://link.springer.com/article/10.1007/s11135-015-0304-z](https://link.springer.com/article/10.1007/s11135-015-0304-z)
+
+Understanding and misunderstanding group mean centering: A commentary on Kelley et al.'s dangerous practice (Bell et al. 2017)
+
++ [https://link.springer.com/article/10.1007/s11135-017-0593-5](https://link.springer.com/article/10.1007/s11135-017-0593-5)
+
+---
+
+## Things we didn't learn about today
+
+**Model diagnostics in multilevel models**
+
+HLMdiag: A Suite of Diagnostics for Hierarchical Linear Models in R:
+
++ [https://www.jstatsoft.org/article/view/v056i05](https://www.jstatsoft.org/article/view/v056i05)
+
+DHARMa - Residual Diagnostics for HierArchical (Multi-level / Mixed) Regression Models
+
++ [https://cran.r-project.org/web/packages/DHARMa/vignettes/DHARMa.html](https://cran.r-project.org/web/packages/DHARMa/vignettes/DHARMa.html)
+
+---
+
+
+## Further resources
+
+Under the following link you will find a great tutorial for multilevel models including applications in R, STATA, SPSS and Mlwin.
+
+LEMMA (Learning Environment for Multilevel Methods and Applications:
+
++ [https://www.cmm.bris.ac.uk/lemma/login/index.php](https://www.cmm.bris.ac.uk/lemma/login/index.php)
+
+Great blog post about linear and logistic multilevel models in R
+
++ [https://rpubs.com/corey_sparks/70812](https://rpubs.com/corey_sparks/70812)
+
+Another introduction to multilevel models in R
+
++ [https://glennwilliams.me/r4psych/mixed-effects-models.html#getting-started-6](https://glennwilliams.me/r4psych/mixed-effects-models.html#getting-started-6)
 
 
 ---
 
-class: black
+# Time for your questions
 
-# Heading 1
+.pull-left[
 
-### Heading 2
+![](https://c.tenor.com/Q9qk5zN5EesAAAAM/space-kitten.gif)
+![](https://c.tenor.com/Q9qk5zN5EesAAAAM/space-kitten.gif)
 
-#### Heading 3
+![](https://c.tenor.com/Q9qk5zN5EesAAAAM/space-kitten.gif)
+![](https://c.tenor.com/Q9qk5zN5EesAAAAM/space-kitten.gif)
 
-- something  
-- something more
 
-1. numbered lists
-1. number two list
 
----
+]
 
-layout: false
-class: title-slide
+.pull-right[
 
-<br>
+![](https://c.tenor.com/Q9qk5zN5EesAAAAM/space-kitten.gif)
+![](https://c.tenor.com/Q9qk5zN5EesAAAAM/space-kitten.gif)
 
-### You can also load in the title slide again
+![](https://c.tenor.com/Q9qk5zN5EesAAAAM/space-kitten.gif)
+![](https://c.tenor.com/Q9qk5zN5EesAAAAM/space-kitten.gif)
 
-adding `layout: false` cancels the logo for all slides following it
 
----
 
-layout: true
-<div class="logo"></div> 
-
-<!-- Re-add logo by adding a blank slide with this content -->
----
-
-But it can be re-added  using a slide with 
-
-```bash
-layout: true
-<div class="logo"></div> 
-```
-
-at the top.
+]
 
 
 ---
 
-# Hope you find this useful!
-
+# Thank you for attending and hope you found this useful!
 
 .pull-left[
 

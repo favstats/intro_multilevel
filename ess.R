@@ -2,6 +2,44 @@
 library(tidyverse)
 library(essurvey)
 
+ess <- readRDS("data/ess_example") %>% 
+  drop_na(income, cntry, education)
+
+cntry_dat <- haven::read_spss("data/ESSMD-2020-cntry_F1.sav")
+
+ess <- ess %>% 
+  left_join(cntry_dat %>% 
+              select(cntry, gini_coef = c_gini_2018, lt_unemployment_rate = c_loun_pc_act_2018, net_migration = c_cnmigratrt_2018))
+
+saveRDS(ess, file = "data/ess_example")
+
+example_data <- palmerpenguins::penguins %>% 
+  select(Group = species, x = bill_length_mm, y = flipper_length_mm)  %>% 
+  mutate(x = (80 - x) / 5,
+         y = (300 - y) / 15) %>%
+  bind_rows(palmerpenguins::penguins %>% 
+              mutate(Group = paste0(species, "B")) %>% 
+              select(Group, x = bill_length_mm, y = flipper_length_mm)  %>% 
+              mutate(x = (85 - x) / 5,
+                     y = (305 - y) / 15)) %>% 
+  group_by(Group) %>% 
+  mutate(y_rev = rev(y)) %>% 
+  ungroup(Group) %>% 
+  # arrange(desc(y)) %>% 
+  mutate(y = ifelse(Group == "Gentoo", y + 2, y)) %>% 
+  mutate(y = ifelse(Group == "GentooB", y - 2.5, y)) %>% 
+  mutate(y = ifelse(Group == "AdelieB", y + 2, y)) %>% 
+  mutate(y = ifelse(Group == "Adelie", y - 1, y)) %>% 
+  mutate(y = ifelse(Group == "Chinstrap", y + 2, y)) %>%
+  mutate(y = ifelse(Group == "ChinstrapB", y - 2, y)) %>%
+  group_by(Group) %>% 
+  mutate(y = ifelse(Group %in% c("ChinstrapB", "AdelieB", "Gentoo"), rev(y), y)) %>% 
+  ungroup(Group) %>% 
+  mutate(x = ifelse(Group %in% c("GentooB"), x-2, x)) %>% 
+  mutate(x = ifelse(Group %in% c("Gentoo"), x+2, x))
+
+saveRDS(example_data, file = "data/example_data.rds")
+
 # wave9 <- essurvey::download_rounds(9, ess_email = "fabio.votta@gmail.com")
 
 ess9 <- haven::read_dta("ESS9/ESS9e03_1.dta", encoding = 'latin1')

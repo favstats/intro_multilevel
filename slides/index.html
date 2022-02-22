@@ -102,7 +102,7 @@ layout: true
 
 class: white
 
-#### Everyone struggles at first but it gets better!
+#### It might be hard at first but it gets better!
 
 &lt;img src="https://raw.githubusercontent.com/favstats/ds3_r_intro/main/images/r_first_then_new.png" width="90%" style="display: block; margin: auto;" /&gt;
 
@@ -125,11 +125,27 @@ class: white
 
 ### Overview
 
-+ **Why** *Multilevel Models*?
-+ **What** are *Multilevel Models*?
-+ **How** estimate *Multilevel Models*?
-+ **How** interpret *Multilevel Models*?
-+ **How** diagnose *Multilevel Models*?
++ *Multilevel* data structures
+
+--
+
++ Why *multilevel models*?
+
+--
+
++ What are *multilevel models*?
+
+--
+
++ Estimate *multilevel models* in R
+
+--
+
++ Some neat R functions to deal with *multilevel models*
+
+--
+
++ Your opportunity to ask questions!
 
 ---
 
@@ -943,7 +959,9 @@ The European Social Survey Round 9 (2018)
 
 The dependent variable is `income` (Household's total net income, all sources).
 
-The independent variable is `education` (Highest level of education).
+The independent level 1 variable is `education` (Highest level of education).
+
+The independent level 2 variable is `net_migration` (net migration 2018)
 
 ---
 
@@ -1244,6 +1262,69 @@ There are three parts in this output
 **1.) Some meta info about your model**
 
 **2.) Group-Level statistics (random effects)**
+
+]
+
+]
+
+
+---
+
+### Null Model - `summary()`
+
+.pull-left[.seventy[
+Estimate a Null Model
+
+
+```r
+summary(null_model)
+```
+
+]
+
+.code70[
+
+```r
+## Linear mixed model fit by REML ['lmerMod']
+## Formula: income ~ (1 | cntry)
+##    Data: ess
+## 
+## REML criterion at convergence: 192022.4
+## 
+## Scaled residuals: 
+##      Min       1Q   Median       3Q      Max 
+## -2.04751 -0.83510 -0.04548  0.84470  2.24208 
+## 
+*## Random effects:
+*##  Groups   Name        Variance Std.Dev.
+*##  cntry    (Intercept) 0.4094   0.6398
+*##  Residual             7.3472   2.7106
+*## Number of obs: 39712, groups:  cntry, 29
+## 
+## Fixed effects:
+##             Estimate Std. Error t value
+## (Intercept)   5.2377     0.1197   43.77
+```
+
+]
+
+
+]
+
+
+.pull-right[
+
+
+.eightyfive[
+
+
+There are three parts in this output
+
+**1.) Some meta info about your model**
+
+**2.) Group-Level statistics (random effects)**
+
+**3.) Fixed effects**
 
 ]
 
@@ -1773,7 +1854,7 @@ coef(null_model)
 
 .pull-right[
 
-&lt;img src="index_files/figure-html/unnamed-chunk-49-1.png" width="504" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-51-1.png" width="504" /&gt;
 
 
 ]
@@ -1832,7 +1913,7 @@ ranef(null_model)
 
 .pull-right[
 
-&lt;img src="index_files/figure-html/unnamed-chunk-51-1.png" width="504" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-53-1.png" width="504" /&gt;
 
 
 ]
@@ -1866,59 +1947,96 @@ Next we specify our independent variables: in our case that is only one, `educat
 
 ### Estimating Multilevel Models - Level 1 Predictors
 
+With the `texreg` package we can get a nice regression table output.
+
+.font60[
 .pull-left[
 
-
-.seventy[
-Estimate a Random Intercept - Fixed Slope model
-
-
 ```r
-summary(lvl1_preds_model)
+htmlreg(list(null_model, lvl1_preds_model))
 ```
 
+&lt;table class="texreg" style="margin: 10px auto;border-collapse: collapse;border-spacing: 0px;caption-side: bottom;color: #000000;border-top: 2px solid #000000;"&gt;
+&lt;caption&gt;Statistical models&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/th&gt;
+&lt;th style="padding-left: 5px;padding-right: 5px;"&gt;Model 1&lt;/th&gt;
+&lt;th style="padding-left: 5px;padding-right: 5px;"&gt;Model 2&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr style="border-top: 1px solid #000000;"&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(Intercept)&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;5.24&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;2.57&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.12)&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.11)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;education&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.78&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.01)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr style="border-top: 1px solid #000000;"&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;AIC&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;192028.43&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;186538.97&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;BIC&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;192054.19&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;186573.33&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Log Likelihood&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-96011.21&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-93265.48&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Num. obs.&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;39712&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;39712&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Num. groups: cntry&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;29&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;29&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Var: cntry (Intercept)&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.41&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.34&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr style="border-bottom: 2px solid #000000;"&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Var: Residual&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;7.35&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;6.40&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;tfoot&gt;
+&lt;tr&gt;
+&lt;td style="font-size: 0.8em;" colspan="3"&gt;&lt;sup&gt;***&lt;/sup&gt;p &amp;lt; 0.001; &lt;sup&gt;**&lt;/sup&gt;p &amp;lt; 0.01; &lt;sup&gt;*&lt;/sup&gt;p &amp;lt; 0.05&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tfoot&gt;
+&lt;/table&gt;
+]
 ]
 
-
-.code70[
-
-```r
-## Linear mixed model fit by REML ['lmerMod']
-## Formula: income ~ education + (1 | cntry)
-##    Data: ess
-## 
-## REML criterion at convergence: 186531
-## 
-## Scaled residuals: 
-##      Min       1Q   Median       3Q      Max 
-## -2.69953 -0.78464 -0.03717  0.77389  2.93782 
-## 
-## Random effects:
-##  Groups   Name        Variance Std.Dev.
-##  cntry    (Intercept) 0.3358   0.5795    
-##  Residual             6.3976   2.5293    
-## Number of obs: 39712, groups:  cntry, 29
-## 
-## Fixed effects:
-##             Estimate Std. Error t value
-## (Intercept)  2.57024    0.11385   22.57
-*## education    0.78209    0.01018   76.80
-## 
-## Correlation of Fixed Effects:
-##           (Intr)
-## education -0.305
-```
-
-]
-
-
-]
 
 .pull-right[
 
 We now get a fixed effect for `education`. We can interpret this just like in a typical linear regression:
 
-&gt; *With every level of education household income increases by 0.78 income levels.*
+&gt; *With every level of education, household income increases by 0.78 income levels.*
 
 ]
 
@@ -1977,93 +2095,10 @@ coef(lvl1_preds_model)
 
 .pull-right[
 
-&lt;img src="index_files/figure-html/unnamed-chunk-57-1.png" width="504" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-58-1.png" width="504" /&gt;
 
 
 ]
-
-
----
-
-## Level 2 Predictors
-
-
-
-
-```r
-lvl2_preds_model &lt;- lmer(income ~ education `+ cpi +` (1|cntry), data = ess)
-```
-
-
-```r
-summary(lvl2_preds_model)
-```
-
-```
-## Linear mixed model fit by REML ['lmerMod']
-## Formula: income ~ education * gini_coef + (1 | cntry)
-##    Data: ess
-## 
-## REML criterion at convergence: 186536.8
-## 
-## Scaled residuals: 
-##      Min       1Q   Median       3Q      Max 
-## -2.70068 -0.78759 -0.03307  0.77245  2.94823 
-## 
-## Random effects:
-##  Groups   Name        Variance Std.Dev.
-##  cntry    (Intercept) 0.2523   0.5023  
-##  Residual             6.3975   2.5293  
-## Number of obs: 39712, groups:  cntry, 29
-## 
-## Fixed effects:
-##                      Estimate Std. Error t value
-## (Intercept)          4.851133   0.681906   7.114
-## education            0.700276   0.073745   9.496
-## gini_coef           -0.077052   0.022778  -3.383
-## education:gini_coef  0.002714   0.002434   1.115
-## 
-## Correlation of Fixed Effects:
-##             (Intr) eductn gin_cf
-## education   -0.368              
-## gini_coef   -0.989  0.358       
-## edctn:gn_cf  0.363 -0.990 -0.360
-```
-
-```r
-texreg::screenreg(lvl2_preds_model)
-```
-
-```
-## 
-## =====================================
-##                         Model 1      
-## -------------------------------------
-## (Intercept)                  4.85 ***
-##                             (0.68)   
-## education                    0.70 ***
-##                             (0.07)   
-## gini_coef                   -0.08 ***
-##                             (0.02)   
-## education:gini_coef          0.00    
-##                             (0.00)   
-## -------------------------------------
-## AIC                     186548.79    
-## BIC                     186600.33    
-## Log Likelihood          -93268.40    
-## Num. obs.                39712       
-## Num. groups: cntry          29       
-## Var: cntry (Intercept)       0.25    
-## Var: Residual                6.40    
-## =====================================
-## *** p &lt; 0.001; ** p &lt; 0.01; * p &lt; 0.05
-```
-
-```r
-sjPlot::plot_model(lvl2_preds_model, type = "int")
-```
-
-&lt;img src="index_files/figure-html/unnamed-chunk-60-1.png" width="504" /&gt;
 
 ---
 
@@ -2119,11 +2154,144 @@ ranef(lvl1_preds_model)
 
 .pull-right[
 
-&lt;img src="index_files/figure-html/unnamed-chunk-62-1.png" width="504" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-60-1.png" width="504" /&gt;
 
 
 ]
 
+
+---
+
+
+## Level 2 Predictors
+
+
+
+
+```r
+lvl2_preds_model &lt;- lmer(income ~ education `+ net_migration +` (1|cntry), data = ess)
+```
+
+We add a level 2 predictor: `net_migration`.
+---
+
+### Estimating Multilevel Models - Level 2 Predictors
+
+
+.font60[
+.pull-left[
+
+```r
+htmlreg(list(null_model, lvl1_preds_model, lvl2_preds_model))
+```
+
+&lt;table class="texreg" style="margin: 10px auto;border-collapse: collapse;border-spacing: 0px;caption-side: bottom;color: #000000;border-top: 2px solid #000000;"&gt;
+&lt;caption&gt;Statistical models&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/th&gt;
+&lt;th style="padding-left: 5px;padding-right: 5px;"&gt;Model 1&lt;/th&gt;
+&lt;th style="padding-left: 5px;padding-right: 5px;"&gt;Model 2&lt;/th&gt;
+&lt;th style="padding-left: 5px;padding-right: 5px;"&gt;Model 3&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr style="border-top: 1px solid #000000;"&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(Intercept)&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;5.24&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;2.57&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;2.38&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.12)&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.11)&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.13)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;education&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.78&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.78&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.01)&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.01)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;net_migration&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.06&lt;sup&gt;*&lt;/sup&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.02)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr style="border-top: 1px solid #000000;"&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;AIC&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;192028.43&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;186538.97&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;186541.21&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;BIC&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;192054.19&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;186573.33&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;186584.16&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Log Likelihood&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-96011.21&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-93265.48&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-93265.61&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Num. obs.&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;39712&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;39712&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;39712&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Num. groups: cntry&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;29&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;29&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;29&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Var: cntry (Intercept)&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.41&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.34&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.29&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr style="border-bottom: 2px solid #000000;"&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Var: Residual&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;7.35&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;6.40&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;6.40&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;tfoot&gt;
+&lt;tr&gt;
+&lt;td style="font-size: 0.8em;" colspan="4"&gt;&lt;sup&gt;***&lt;/sup&gt;p &amp;lt; 0.001; &lt;sup&gt;**&lt;/sup&gt;p &amp;lt; 0.01; &lt;sup&gt;*&lt;/sup&gt;p &amp;lt; 0.05&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tfoot&gt;
+&lt;/table&gt;
+]
+]
+
+
+.pull-right[
+
+We now get a fixed effect for `net_migration`. We can interpret this just like in a typical linear regression:
+
+&gt; *With every unit increase of net migration, household income increases by 0.056 income levels.*
+
+]
 
 ---
 
@@ -2134,7 +2302,7 @@ ranef(lvl1_preds_model)
 
 
 ```r
-rs_preds_model &lt;- lmer(income ~ education + (`education`|cntry), data = ess)
+rs_preds_model &lt;- lmer(income ~ education + net_migration + (`education`|cntry), data = ess)
 ```
 
 
@@ -2142,57 +2310,150 @@ Next we specify our random slope for `education`.
 
 ---
 
+
 ### Estimating Multilevel Models - Random Slope
 
-.pull-left[
-.seventy[
-Estimate a Random Intercept - Random Slope model
 
+.font50[
+.pull-left[
 
 ```r
-summary(rs_preds_model)
+htmlreg(list(null_model, lvl1_preds_model, lvl2_preds_model, rs_preds_model))
 ```
 
+&lt;table class="texreg" style="margin: 10px auto;border-collapse: collapse;border-spacing: 0px;caption-side: bottom;color: #000000;border-top: 2px solid #000000;"&gt;
+&lt;caption&gt;Statistical models&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/th&gt;
+&lt;th style="padding-left: 5px;padding-right: 5px;"&gt;Model 1&lt;/th&gt;
+&lt;th style="padding-left: 5px;padding-right: 5px;"&gt;Model 2&lt;/th&gt;
+&lt;th style="padding-left: 5px;padding-right: 5px;"&gt;Model 3&lt;/th&gt;
+&lt;th style="padding-left: 5px;padding-right: 5px;"&gt;Model 4&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr style="border-top: 1px solid #000000;"&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(Intercept)&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;5.24&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;2.57&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;2.38&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;2.34&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.12)&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.11)&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.13)&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.15)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;education&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.78&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.78&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.79&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.01)&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.01)&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.02)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;net_migration&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.06&lt;sup&gt;*&lt;/sup&gt;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.06&lt;sup&gt;*&lt;/sup&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.02)&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;(0.02)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr style="border-top: 1px solid #000000;"&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;AIC&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;192028.43&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;186538.97&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;186541.21&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;186497.59&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;BIC&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;192054.19&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;186573.33&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;186584.16&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;186557.71&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Log Likelihood&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-96011.21&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-93265.48&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-93265.61&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-93241.79&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Num. obs.&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;39712&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;39712&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;39712&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;39712&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Num. groups: cntry&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;29&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;29&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;29&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;29&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Var: cntry (Intercept)&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.41&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.34&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.29&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.39&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Var: Residual&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;7.35&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;6.40&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;6.40&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;6.38&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Var: cntry education&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;0.01&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr style="border-bottom: 2px solid #000000;"&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;Cov: cntry (Intercept) education&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;&amp;nbsp;&lt;/td&gt;
+&lt;td style="padding-left: 5px;padding-right: 5px;"&gt;-0.03&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;tfoot&gt;
+&lt;tr&gt;
+&lt;td style="font-size: 0.8em;" colspan="5"&gt;&lt;sup&gt;***&lt;/sup&gt;p &amp;lt; 0.001; &lt;sup&gt;**&lt;/sup&gt;p &amp;lt; 0.01; &lt;sup&gt;*&lt;/sup&gt;p &amp;lt; 0.05&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tfoot&gt;
+&lt;/table&gt;
+]
 ]
 
-.code70[
 
-```r
-## Linear mixed model fit by REML ['lmerMod']
-## Formula: income ~ education + (education | cntry)
-##    Data: ess
-## 
-## REML criterion at convergence: 186483.1
-## 
-## Scaled residuals: 
-##      Min       1Q   Median       3Q      Max 
-## -2.68977 -0.78464 -0.03798  0.78052  2.98718 
-## 
-## Random effects:
-##  Groups   Name        Variance Std.Dev. Corr 
-##  cntry    (Intercept) 0.5439   0.7375        
-*##           education   0.0114   0.1068   -0.61
-##  Residual             6.3830   2.5265        
-## Number of obs: 39712, groups:  cntry, 29
-## 
-## Fixed effects:
-##             Estimate Std. Error t value
-## (Intercept)  2.54316    0.14257   17.84
-## education    0.79358    0.02265   35.04
-## 
-## Correlation of Fixed Effects:
-##           (Intr)
-## education -0.643
-```
-
-]
-]
-
-.pull-left[
+.pull-right[
 
 We now also have the random slope for `education` in our random effects report.
 
-The variance for the slope is `\(0.0114\)`.
+&gt; The variance for the slope is `\(0.01\)`.
 
 Remember: this is in units of the dependent variable. So this means the effect doesn't differ by much.
 
@@ -2213,36 +2474,36 @@ coef(rs_preds_model)
 
 ```
 ## $cntry
-##    (Intercept) education
-## AT   2.6127928 0.7229482
-## BE   3.2755878 0.6997987
-## BG   1.7380561 0.8223385
-## CH   2.3067816 0.8618110
-## CY   1.9307491 0.8650847
-## CZ   2.9015942 0.7031620
-## DE   3.1902924 0.7675498
-## DK   2.7100173 0.7367526
-## EE   3.0941904 0.6839451
-## ES   3.1212971 0.6863033
-## FI   3.1043859 0.8028131
-## FR   1.9582698 0.8997570
-## GB   2.5873194 0.7332806
-## HR   1.7263126 0.9212538
-## HU   2.5102173 0.8427361
-## IE   1.8443257 0.7753739
-## IS   3.6809917 0.6838421
-## IT   2.7435916 0.7472266
-## LT   1.3243014 0.7752819
-## LV   0.7560217 0.8484992
-## ME   2.3155664 0.9153373
-## NL   3.8393639 0.7616367
-## NO   3.2587224 0.5674478
-## PL   2.5944061 0.8320965
-## PT   2.6502844 0.9147602
-## RS   2.1455726 0.8367963
-## SE   3.3164834 0.7276995
-## SI   2.1402684 0.9467615
-## SK   2.3737687 0.9315684
+##    (Intercept) education net_migration
+## AT   2.3823695 0.7209433    0.05916834
+## BE   3.0107437 0.7023391    0.05916834
+## BG   1.7821846 0.8172314    0.05916834
+## CH   2.0330948 0.8613404    0.05916834
+## CY   1.4081236 0.8612987    0.05916834
+## CZ   2.6861779 0.7034622    0.05916834
+## DE   2.8912208 0.7714723    0.05916834
+## DK   2.5196858 0.7366879    0.05916834
+## EE   2.7765936 0.6849031    0.05916834
+## ES   2.6995968 0.6872384    0.05916834
+## FI   2.9610223 0.8074112    0.05916834
+## FR   1.9600204 0.8990370    0.05916834
+## GB   2.3596950 0.7323443    0.05916834
+## HR   1.9270830 0.9185291    0.05916834
+## HU   2.3069951 0.8454327    0.05916834
+## IE   1.3379183 0.7696738    0.05916834
+## IS   2.5878995 0.6866045    0.05916834
+## IT   2.6766741 0.7468343    0.05916834
+## LT   1.4244129 0.7665395    0.05916834
+## LV   0.9840822 0.8266132    0.05916834
+## ME   2.3836665 0.9203399    0.05916834
+## NL   3.5086715 0.7708756    0.05916834
+## NO   3.0529471 0.5675452    0.05916834
+## PL   2.5426111 0.8358675    0.05916834
+## PT   2.5686918 0.9197795    0.05916834
+## RS   2.1494740 0.8349456    0.05916834
+## SE   2.8038365 0.7308521    0.05916834
+## SI   1.7171374 0.9480001    0.05916834
+## SK   2.3066903 0.9389902    0.05916834
 ## 
 ## attr(,"class")
 ## [1] "coef.mer"
@@ -2273,36 +2534,36 @@ ranef(rs_preds_model)
 
 ```
 ## $cntry
-##    (Intercept)    education
-## AT  0.06963651 -0.070633287
-## BE  0.73243147 -0.093782770
-## BG -0.80510021  0.028756989
-## CH -0.23637470  0.068229501
-## CY -0.61240721  0.071503240
-## CZ  0.35843787 -0.090419496
-## DE  0.64713614 -0.026031651
-## DK  0.16686100 -0.056828899
-## EE  0.55103410 -0.109636363
-## ES  0.57814082 -0.107278130
-## FI  0.56122962  0.009231656
-## FR -0.58488648  0.106175558
-## GB  0.04416314 -0.060300841
-## HR -0.81684370  0.127672384
-## HU -0.03293894  0.049154645
-## IE -0.69883057 -0.018207614
-## IS  1.13783545 -0.109739320
-## IT  0.20043528 -0.046354912
-## LT -1.21885492 -0.018299536
-## LV -1.78713458  0.054917742
-## ME -0.22758984  0.121755882
-## NL  1.29620761 -0.031944737
-## NO  0.71556613 -0.226133653
-## PL  0.05124986  0.038515041
-## PT  0.10712815  0.121178741
-## RS -0.39758365  0.043214803
-## SE  0.77332711 -0.065881989
-## SI -0.40288790  0.153180072
-## SK -0.16938755  0.137986944
+##    (Intercept)   education
+## AT  0.04618600 -0.07261300
+## BE  0.67456022 -0.09121716
+## BG -0.55399880  0.02367509
+## CH -0.30308861  0.06778409
+## CY -0.92805981  0.06774242
+## CZ  0.34999448 -0.09009411
+## DE  0.55503740 -0.02208394
+## DK  0.18350236 -0.05686837
+## EE  0.44041018 -0.10865315
+## ES  0.36341330 -0.10631785
+## FI  0.62483884  0.01385489
+## FR -0.37616310  0.10548070
+## GB  0.02351152 -0.06121196
+## HR -0.40910047  0.12497279
+## HU -0.02918836  0.05187646
+## IE -0.99826516 -0.02388248
+## IS  0.25171604 -0.10695181
+## IT  0.34049061 -0.04672197
+## LT -0.91177054 -0.02701675
+## LV -1.35210129  0.03305691
+## ME  0.04748303  0.12678363
+## NL  1.17248806 -0.02268072
+## NO  0.71676365 -0.22601103
+## PL  0.20642767  0.04231125
+## PT  0.23250830  0.12622323
+## RS -0.18670944  0.04138928
+## SE  0.46765303 -0.06270416
+## SI -0.61904600  0.15444386
+## SK -0.02949310  0.14543389
 ## 
 ## with conditional variances for "cntry"
 ```
@@ -2332,15 +2593,20 @@ The higher the average income-level, the greater the impact of education on inco
 
 ### Model Comparisons
 
+.eightyfive[
 When models are nested (i.e. they only differ by additional parameters), we can use a likelihood ratio test (implemented via `anova()`). 
+]
+
+
 
 --
 
+.eightyfive[
 Luckily, `anova()` automatically refits the model with ML (instead of REML), which is the recommended estimation for model comparison.
 
 
 ```r
-anova(null_model, lvl1_preds_model, rs_preds_model)
+anova(null_model, lvl1_preds_model, lvl2_preds_model, rs_preds_model)
 ```
 
 ```
@@ -2348,26 +2614,30 @@ anova(null_model, lvl1_preds_model, rs_preds_model)
 ## Models:
 ## null_model: income ~ (1 | cntry)
 ## lvl1_preds_model: income ~ education + (1 | cntry)
-## rs_preds_model: income ~ education + (education | cntry)
-##                  npar    AIC    BIC logLik deviance    Chisq Df Pr(&gt;Chisq)    
-## null_model          3 192026 192052 -96010   192020                           
-## lvl1_preds_model    4 186529 186563 -93261   186521 5498.989  1  &lt; 2.2e-16 ***
-## rs_preds_model      6 186487 186538 -93237   186475   46.336  2  8.676e-11 ***
+## lvl2_preds_model: income ~ education + net_migration + (1 | cntry)
+## rs_preds_model: income ~ education + net_migration + (education | cntry)
+##                  npar    AIC    BIC logLik deviance     Chisq Df Pr(&gt;Chisq)    
+## null_model          3 192026 192052 -96010   192020                            
+## lvl1_preds_model    4 186529 186563 -93261   186521 5498.9893  1  &lt; 2.2e-16 ***
+## lvl2_preds_model    5 186525 186568 -93258   186515    5.6777  1    0.01718 *  
+## rs_preds_model      7 186483 186543 -93235   186469   46.0279  2  1.012e-10 ***
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```
 
 We see a significant better model fit for each addition of variables.
+]
 
 ---
 
 ### Model Comparisons
 
+.eightyfive[
 We can always use the AIC and BIC for model comparisons (again with ML estimation).
 
 
 ```r
-anova(null_model, lvl1_preds_model, rs_preds_model)
+anova(null_model, lvl1_preds_model, lvl2_preds_model, rs_preds_model)
 ```
 
 ```
@@ -2375,22 +2645,35 @@ anova(null_model, lvl1_preds_model, rs_preds_model)
 ## Models:
 ## null_model: income ~ (1 | cntry)
 ## lvl1_preds_model: income ~ education + (1 | cntry)
-## rs_preds_model: income ~ education + (education | cntry)
-##                  npar    AIC    BIC logLik deviance    Chisq Df Pr(&gt;Chisq)    
-## null_model          3 192026 192052 -96010   192020                           
-## lvl1_preds_model    4 186529 186563 -93261   186521 5498.989  1  &lt; 2.2e-16 ***
-## rs_preds_model      6 186487 186538 -93237   186475   46.336  2  8.676e-11 ***
+## lvl2_preds_model: income ~ education + net_migration + (1 | cntry)
+## rs_preds_model: income ~ education + net_migration + (education | cntry)
+##                  npar    AIC    BIC logLik deviance     Chisq Df Pr(&gt;Chisq)    
+## null_model          3 192026 192052 -96010   192020                            
+## lvl1_preds_model    4 186529 186563 -93261   186521 5498.9893  1  &lt; 2.2e-16 ***
+## lvl2_preds_model    5 186525 186568 -93258   186515    5.6777  1    0.01718 *  
+## rs_preds_model      7 186483 186543 -93235   186469   46.0279  2  1.012e-10 ***
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```
 
-In this case, we want AIC and BIC values to be closer to zero.
+In this case, AIC and BIC values closer to zero indicate better fit.
+
+]
+
+---
+
+class: white, middle, center
+
+### Cool R packages/functions 
+
+![](https://i.kym-cdn.com/photos/images/newsfeed/000/538/716/7f5.gif)
+### that help with multilevel modelling
 
 ---
 
 class: white
 
-### Check Model Assumptions
+### Check Model Assumptions with `performance` package
 
 --
 
@@ -2399,325 +2682,231 @@ class: white
 performance::check_model(rs_preds_model)
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-74-1.png" width="936" /&gt;
 
-
----
-
-## Learn more about multilevels
-
-https://glennwilliams.me/r4psych/mixed-effects-models.html#getting-started-6
-
-Centering or Not Centering in Multilevel Models? The Role of the Group Mean and the Assessment of Group Effects
-
-Group-mean-centering independent variables in multi-level models is dangerous
-
-Residuendiagnostik (jep das gibt’s auch noch)
-Genauso wie bei einer handelsüblichen linearen Regressionen auf der ersten Ebene gibt es einige Gütekriterien welche eine Multilevel-Regression einhalten muss.
-
-Nähere Informationen findet ihr dazu unter folgenden Links:
-
-HLMdiag: A Suite of Diagnostics for Hierarchical Linear Models in R
-
-DHARMa - Residual Diagnostics for HierArchical (Multi-level / Mixed) Regression Models
-
-6 Weitere Ressourcen
-Unter folgendem Link findet ihr ein tolles Tutorial für Multilevel-Modelle inklusive Anwendungen in R, STATA, SPSS und Mlwin:
-
-LEMMA (Learning Environment for Multilevel Methods and Applications)
-
-Guter Artikel für lineare sowie logistische Multilevelmodelle:
-
-Multi-level Models by Corey Sparks
-
----
-
-### Visualize Random Intercept
-
----
-
-class: white
-
-### Data Structures
-
-
-.panelset.sideways.right[
-.panel[.panel-name[&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;From this data we may conclude that *x is **positively** correlated with y*.]
-
-.seventy[You might be used to your data looking like this: An independent variable `\(x\)` and a dependent variable `\(y\)`.]
-
-
-&lt;img src="index_files/figure-html/unnamed-chunk-75-1.png" width="720" /&gt;
+&lt;img src="index_files/figure-html/unnamed-chunk-75-1.png" width="936" /&gt;
 
 
 
-]]
 
----
-
-.panel[
-.panel-name[
-Plot about Orange Trees
-]
-
-.seventy[However, if we introduce *groupings* of the data, a different picture emerges.]
-
-
-&lt;img src="index_files/figure-html/unnamed-chunk-76-1.png" width="720" /&gt;
-
-.seventy[In each of the groupings we find a ***negative** correlation between x and y*.]
-
-
-]
-
-.panel[
-.panel-name[
-Plot about Orange Trees
-]
-
-&lt;img src="index_files/figure-html/unnamed-chunk-77-1.png" width="720" /&gt;
-]
-
-]
-
----
-
-class: white
-
-### Data Structures
-
-.pull-left[
-
-
-.eightyfive[You might be used to your data looking like this: An independent variable `\(x\)` and a dependent variable `\(y\)`.]
-
-&lt;img src="index_files/figure-html/unnamed-chunk-78-1.png" width="720" /&gt;
-
-]
-
-.eightyfive[From this data we may conclude that *x is **positively** correlated with y*.]
-
----
-
-class: white
-
-### Data Structures
-
-
-.eightyfive[However, if we introduce *groupings* of the data, a different picture emerges.]
-
-&lt;img src="index_files/figure-html/unnamed-chunk-79-1.png" width="720" /&gt;
-
-
-.eightyfive[In each of the groupings we find a ***negative** correlation between x and y*.]
 
 
 ---
 
 class: white
 
-### Data Structures
+### Extract model statistics with `broom.mixed`
 
-.pull-left[
-.eightyfive[You might be used to your data looking like this: An independent variable `\(x\)` and a dependent variable `\(y\)`.]
-
-&lt;img src="index_files/figure-html/unnamed-chunk-80-1.png" width="432" /&gt;
-]
+The function `tidy()` gives us all model parameters (random and fixed).
 
 --
 
-.pull-right[
-However, if we introduce *groupings* of the data, a different picture emerges.
-
-&lt;img src="index_files/figure-html/unnamed-chunk-81-1.png" width="432" /&gt;
-]
-
-
-
----
-
-# Heading 1
-
-You can use several heading levels
-
-### Heading 2
-
-This is text under a second level heading. And some **bold** and  _italics_ text.
-
-#### Heading 3
-
-It's also easy to add `\(\LaTeX\)` code
-$$x^n + y^n = z^n $$
-
-Three dashes make a new slide
-
----
-
-
-# Heading 1
-
-- something  
-- something more
-
-1. numbered lists
-1. number two list
-
----
-
-### Add some R code
-
 
 ```r
-summary(mtcars)
+broom.mixed::tidy(rs_preds_model)
 ```
 
 ```
-##       mpg             cyl             disp             hp       
-##  Min.   :10.40   Min.   :4.000   Min.   : 71.1   Min.   : 52.0  
-##  1st Qu.:15.43   1st Qu.:4.000   1st Qu.:120.8   1st Qu.: 96.5  
-##  Median :19.20   Median :6.000   Median :196.3   Median :123.0  
-##  Mean   :20.09   Mean   :6.188   Mean   :230.7   Mean   :146.7  
-##  3rd Qu.:22.80   3rd Qu.:8.000   3rd Qu.:326.0   3rd Qu.:180.0  
-##  Max.   :33.90   Max.   :8.000   Max.   :472.0   Max.   :335.0  
-##       drat             wt             qsec             vs        
-##  Min.   :2.760   Min.   :1.513   Min.   :14.50   Min.   :0.0000  
-##  1st Qu.:3.080   1st Qu.:2.581   1st Qu.:16.89   1st Qu.:0.0000  
-##  Median :3.695   Median :3.325   Median :17.71   Median :0.0000  
-##  Mean   :3.597   Mean   :3.217   Mean   :17.85   Mean   :0.4375  
-##  3rd Qu.:3.920   3rd Qu.:3.610   3rd Qu.:18.90   3rd Qu.:1.0000  
-##  Max.   :4.930   Max.   :5.424   Max.   :22.90   Max.   :1.0000  
-##        am              gear            carb      
-##  Min.   :0.0000   Min.   :3.000   Min.   :1.000  
-##  1st Qu.:0.0000   1st Qu.:3.000   1st Qu.:2.000  
-##  Median :0.0000   Median :4.000   Median :2.000  
-##  Mean   :0.4062   Mean   :3.688   Mean   :2.812  
-##  3rd Qu.:1.0000   3rd Qu.:4.000   3rd Qu.:4.000  
-##  Max.   :1.0000   Max.   :5.000   Max.   :8.000
+## # A tibble: 7 × 6
+##   effect   group    term                       estimate std.error statistic
+##   &lt;chr&gt;    &lt;chr&gt;    &lt;chr&gt;                         &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
+## 1 fixed    &lt;NA&gt;     (Intercept)                  2.34      0.147      15.9 
+## 2 fixed    &lt;NA&gt;     education                    0.794     0.0226     35.1 
+## 3 fixed    &lt;NA&gt;     net_migration                0.0592    0.0231      2.56
+## 4 ran_pars cntry    sd__(Intercept)              0.624    NA          NA   
+## 5 ran_pars cntry    cor__(Intercept).education  -0.513    NA          NA   
+## 6 ran_pars cntry    sd__education                0.107    NA          NA   
+## 7 ran_pars Residual sd__Observation              2.53     NA          NA
 ```
-
----
-
-### Add cool gifs to your slides!
-
-
-![](https://s4.gifyu.com/images/ezgif-4-d64ba87b438c.gif)
-
----
-
-### Create two columns
-
-.pull-left[
-
-This text goes in the left column.
-
-![](https://s4.gifyu.com/images/ezgif-4-d64ba87b438c.gif)
-
-]
-
-.pull-right[
-
-This text goes in the right column.
-
-![](https://s4.gifyu.com/images/ezgif-4-d64ba87b438c.gif)
-
-
-]
-
-
-
----
-
-class: middle, center
-
-# You can also create *special* slides
-
-
-For example:
-
-`class: white`
-
-gives you a white background rather than a babyblue one. 
-
-This comes in handy for graphs (with white backgrounds).
 
 ---
 
 class: white
 
-#### add `class: white`
+### Extract model statistics with `broom.mixed`
+
+The function `augment()` gives us fitted values (incl. random intercepts and slopes) for every single data point.
 
 
-
-
+--
 
 
 ```r
-ggplot(diamonds, aes(x = carat, y = price, color = clarity)) +
-  geom_point() +
-  theme_minimal() 
+broom.mixed::augment(rs_preds_model)
 ```
 
-&lt;img src="index_files/figure-html/unnamed-chunk-84-1.png" width="720" /&gt;
-
-
----
-
-class: black, middle
-
-# a black slide with middle centering
-
-using `class: black`
-
-
----
-
-class: black
-
-# Heading 1
-
-### Heading 2
-
-#### Heading 3
-
-- something  
-- something more
-
-1. numbered lists
-1. number two list
-
----
-
-layout: false
-class: title-slide
-
-&lt;br&gt;
-
-### You can also load in the title slide again
-
-adding `layout: false` cancels the logo for all slides following it
-
----
-
-layout: true
-&lt;div class="logo"&gt;&lt;/div&gt; 
-
-&lt;!-- Re-add logo by adding a blank slide with this content --&gt;
----
-
-But it can be re-added  using a slide with 
-
-```bash
-layout: true
-&lt;div class="logo"&gt;&lt;/div&gt; 
+```
+## # A tibble: 39,712 × 15
+##       income education net_migration cntry .fitted .resid    .hat .cooksd .fixed
+##    &lt;dbl+lbl&gt;     &lt;dbl&gt;         &lt;dbl&gt; &lt;fct&gt;   &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;
+##  1 3 [C - 3…         3             4 AT       4.78 -1.78  5.05e-4 8.38e-5   4.95
+##  2 5 [F - 5…         3             4 AT       4.78  0.218 5.05e-4 1.26e-6   4.95
+##  3 9 [D - 9…         2             4 AT       4.06  4.94  1.09e-3 1.39e-3   4.16
+##  4 6 [S - 6…         3             4 AT       4.78  1.22  5.05e-4 3.92e-5   4.95
+##  5 1 [J - 1…         2             4 AT       4.06 -3.06  1.09e-3 5.35e-4   4.16
+##  6 5 [F - 5…         3             4 AT       4.78  0.218 5.05e-4 1.26e-6   4.95
+##  7 7 [K - 7…         3             4 AT       4.78  2.22  5.05e-4 1.30e-4   4.95
+##  8 2 [R - 2…         3             4 AT       4.78 -2.78  5.05e-4 2.04e-4   4.95
+##  9 3 [C - 3…         3             4 AT       4.78 -1.78  5.05e-4 8.38e-5   4.95
+## 10 4 [M - 4…         3             4 AT       4.78 -0.782 5.05e-4 1.61e-5   4.95
+## # … with 39,702 more rows, and 6 more variables: .mu &lt;dbl&gt;, .offset &lt;dbl&gt;,
+## #   .sqrtXwt &lt;dbl&gt;, .sqrtrwt &lt;dbl&gt;, .weights &lt;dbl&gt;, .wtres &lt;dbl&gt;
 ```
 
-at the top.
+
+---
+
+### Plot random intercepts and slopes with `broom.mixed`
+
+.pull-left[
+
+Output from `augment` allows us to plot random slopes and intercepts.
+
+
+```r
+broom.mixed::augment(rs_preds_model) %&gt;% 
+  filter(cntry %in% cntries) %&gt;%
+  ggplot(aes(x=education, y=income)) +
+  geom_line(aes(x = education, 
+                y=.fitted, 
+                color = cntry), 
+            inherit.aes=FALSE, size = 1) +
+  theme_minimal() +
+  theme(legend.position="none") +
+  ggthemes::scale_color_gdocs()
+```
+]
+
+.pull-right[
+&lt;img src="index_files/figure-html/unnamed-chunk-79-1.png" width="504" /&gt;
+]
+
+---
+
+class: white
+
+## Plot fixed effects with `sjPlot`
+
+This is a great function that plots coefficients: `plot_model()`
+
+
+```r
+sjPlot::plot_model(rs_preds_model, show.p = T, show.values = T)
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-80-1.png" width="720" /&gt;
+
+Also works on various other models (OLS, logistic regression).
+
+---
+
+## Plot random effects with `sjPlot`
+
+With `plot_model()` you can also graph random effects
+
+
+```r
+sjPlot::plot_model(rs_preds_model, show.values = T, type = "re", value.offset = 0.5)
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-81-1.png" width="720" /&gt;
+
 
 
 ---
 
-# Hope you find this useful!
+## Things we didn't learn about today
 
+**Cross-Level Interactions**
+
+How to do multilevel analyses with cross-level interaction by Utrecht University
+
++ [https://multilevel-analysis.sites.uu.nl/tutorials/](https://multilevel-analysis.sites.uu.nl/tutorials/)
+
+
+---
+
+## Things we didn't learn about today
+
+**Centering of Variables in Multilevel models**
+
+Centering or Not Centering in Multilevel Models? The Role of the Group Mean and the Assessment of Group Effects (Paccagnella 2006)
+
++ [https://www.ncbi.nlm.nih.gov/pubmed/16394187](https://www.ncbi.nlm.nih.gov/pubmed/16394187)
+
+Group-mean-centering independent variables in multi-level models is dangerous (Kelley et al. 2016)
+
++ [https://link.springer.com/article/10.1007/s11135-015-0304-z](https://link.springer.com/article/10.1007/s11135-015-0304-z)
+
+Understanding and misunderstanding group mean centering: A commentary on Kelley et al.'s dangerous practice (Bell et al. 2017)
+
++ [https://link.springer.com/article/10.1007/s11135-017-0593-5](https://link.springer.com/article/10.1007/s11135-017-0593-5)
+
+---
+
+## Things we didn't learn about today
+
+**Model diagnostics in multilevel models**
+
+HLMdiag: A Suite of Diagnostics for Hierarchical Linear Models in R:
+
++ [https://www.jstatsoft.org/article/view/v056i05](https://www.jstatsoft.org/article/view/v056i05)
+
+DHARMa - Residual Diagnostics for HierArchical (Multi-level / Mixed) Regression Models
+
++ [https://cran.r-project.org/web/packages/DHARMa/vignettes/DHARMa.html](https://cran.r-project.org/web/packages/DHARMa/vignettes/DHARMa.html)
+
+---
+
+
+## Further resources
+
+Under the following link you will find a great tutorial for multilevel models including applications in R, STATA, SPSS and Mlwin.
+
+LEMMA (Learning Environment for Multilevel Methods and Applications:
+
++ [https://www.cmm.bris.ac.uk/lemma/login/index.php](https://www.cmm.bris.ac.uk/lemma/login/index.php)
+
+Great blog post about linear and logistic multilevel models in R
+
++ [https://rpubs.com/corey_sparks/70812](https://rpubs.com/corey_sparks/70812)
+
+Another introduction to multilevel models in R
+
++ [https://glennwilliams.me/r4psych/mixed-effects-models.html#getting-started-6](https://glennwilliams.me/r4psych/mixed-effects-models.html#getting-started-6)
+
+
+---
+
+# Time for your questions
+
+.pull-left[
+
+![](https://c.tenor.com/Q9qk5zN5EesAAAAM/space-kitten.gif)
+![](https://c.tenor.com/Q9qk5zN5EesAAAAM/space-kitten.gif)
+
+![](https://c.tenor.com/Q9qk5zN5EesAAAAM/space-kitten.gif)
+![](https://c.tenor.com/Q9qk5zN5EesAAAAM/space-kitten.gif)
+
+
+
+]
+
+.pull-right[
+
+![](https://c.tenor.com/Q9qk5zN5EesAAAAM/space-kitten.gif)
+![](https://c.tenor.com/Q9qk5zN5EesAAAAM/space-kitten.gif)
+
+![](https://c.tenor.com/Q9qk5zN5EesAAAAM/space-kitten.gif)
+![](https://c.tenor.com/Q9qk5zN5EesAAAAM/space-kitten.gif)
+
+
+
+]
+
+
+---
+
+# Thank you for attending and hope you found this useful!
 
 .pull-left[
 
