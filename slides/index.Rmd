@@ -2818,7 +2818,7 @@ class: white
 
 ### Correlation between random intercepts and slopes
 
-The higher the average income-level, the greater the impact of education on income.
+The lower the average income-level, the greater the impact of education on income.
 
 ```{r, echo=F, fig.width=11, fig.height=5.5}
 coef(rs_preds_model)$cntry %>% 
